@@ -9,4 +9,8 @@
     <AssemblyName>IdrsComBridge</AssemblyName>
     <RootNamespace>IdrsComBridge</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\integration-demo\IdrsNativeWrapper.cs" Link="IdrsNativeWrapper.cs" />
+  </ItemGroup>
 </Project>
