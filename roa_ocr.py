@@ -11,6 +11,14 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
+# Configurar encoding de salida UTF-8 para consola de Windows
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 from config import settings
 from core.pipeline import PDFPipeline, PipelineConfig
 
@@ -25,7 +33,7 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)-7s | %(message)s",
     handlers=[
         logging.FileHandler(log_file, encoding="utf-8"),
-        logging.StreamHandler()
+        logging.StreamHandler(sys.stdout)
     ]
 )
 log = logging.getLogger("ROA_OCR")
@@ -33,8 +41,8 @@ log = logging.getLogger("ROA_OCR")
 
 def main():
     print("=" * 65)
-    print(" 🐺 ROA OCR v2.0 — Sistema Inteligente de Procesamiento & OCR")
-    print(" Motor Principal: iDRS15 Nativo (x64 Engine)")
+    print("  ROA OCR v2.0 — Sistema Inteligente de Procesamiento & OCR")
+    print("  Motor Principal: iDRS15 Nativo (x64 Engine)")
     print("=" * 65)
     print(f"📁 Directorio Trabajo: {settings.base_dir}")
     print(f"📁 PDFS Pendientes:   {settings.input_dir}")
@@ -63,7 +71,7 @@ def main():
         print(f"❌ Error al inicializar motores OCR: {e}")
         return
 
-    # Buscar PDFs pendientes
+    # Buscar PDFs e imágenes pendientes
     input_files = []
     for ext in ["*.pdf", "*.bmp", "*.png", "*.jpg", "*.tiff"]:
         input_files.extend(list(settings.input_dir.glob(ext)))

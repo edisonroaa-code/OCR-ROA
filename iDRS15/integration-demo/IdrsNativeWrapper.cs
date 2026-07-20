@@ -1,5 +1,7 @@
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace IntegrationDemo;
 
@@ -16,6 +18,7 @@ internal sealed class IdrsNativeWrapper : IDisposable
     private readonly DestroyDrsDelegate? _destroyDrs;
     private readonly SetEnvOcrDelegate? _setEnvOcr;
     private readonly SetAlphabetDelegate? _setAlphabet;
+    private readonly SetResolutionDelegate? _setResolution;
     private readonly SetImageDelegate? _setImage;
     private readonly SetOutputRetnDelegate? _setOutputRetn;
     private readonly OcrDelegate? _ocr;
@@ -38,13 +41,16 @@ internal sealed class IdrsNativeWrapper : IDisposable
     private delegate int SetAlphabetDelegate(IntPtr engine, ushort alphabetId);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int SetResolutionDelegate(IntPtr engine, int dpi);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int SetImageDelegate(IntPtr engine, IntPtr buffer, int width, int height, int pitch);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int SetOutputRetnDelegate(IntPtr engine, IntPtr option);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate int OcrDelegate(IntPtr engine, IntPtr option);
+    private delegate int OcrDelegate(IntPtr engine);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int ZonesDelegate(IntPtr engine);
@@ -53,7 +59,7 @@ internal sealed class IdrsNativeWrapper : IDisposable
     private delegate int FormatDelegate(IntPtr engine);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate int GetNbZonesDelegate(IntPtr engine);
+    private delegate int GetNbZonesDelegate(IntPtr engine, out int zonesCount);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int LoggerDelegate(IntPtr a1, IntPtr a2, IntPtr a3, IntPtr a4);
@@ -99,7 +105,8 @@ internal sealed class IdrsNativeWrapper : IDisposable
         _destroyDrs = ResolveDelegate<DestroyDrsDelegate>("drsD_destroy_drs");
         _setEnvOcr = ResolveDelegate<SetEnvOcrDelegate>("drsD_set_env_ocr");
         _setAlphabet = ResolveDelegate<SetAlphabetDelegate>("drs_set_alphabet");
-        _setImage = ResolveDelegate<SetImageDelegate>("drs_set_image");
+        _setResolution = ResolveDelegate<SetResolutionDelegate>("drs_set_resolution");
+        _setImage = ResolveDelegate<SetImageDelegate>("drs_set_image_grey") ?? ResolveDelegate<SetImageDelegate>("drs_set_image_color") ?? ResolveDelegate<SetImageDelegate>("drs_set_image");
         _setOutputRetn = ResolveDelegate<SetOutputRetnDelegate>("drs_set_output_retn");
         _ocr = ResolveDelegate<OcrDelegate>("drsOcr");
         _zones = ResolveDelegate<ZonesDelegate>("drsZones");
@@ -195,6 +202,11 @@ internal sealed class IdrsNativeWrapper : IDisposable
             _initializationDiagnostics["set_alphabet"] = alphaResult == 0;
         }
 
+        if (_setResolution is not null)
+        {
+            _ = _setResolution(_engineHandle, 300);
+        }
+
         if (_setOutputRetn is not null)
         {
             var retnResult = _setOutputRetn(_engineHandle, (IntPtr)1);
@@ -207,31 +219,50 @@ internal sealed class IdrsNativeWrapper : IDisposable
         return true;
     }
 
+    [HandleProcessCorruptedStateExceptions, SecurityCritical]
     public bool RecognizeImageBuffer(byte[] pixelData, int width, int height, int pitch, out int zonesCount)
     {
         zonesCount = 0;
-        if (_engineHandle == IntPtr.Zero || _setImage is null || _ocr is null)
+        if (_engineHandle == IntPtr.Zero || _setImage is null || _ocr is null || pixelData == null || pixelData.Length == 0)
         {
             return false;
         }
 
+        Console.WriteLine($"[DBG] RecognizeImageBuffer: bufferLen={pixelData.Length}, w={width}, h={height}, pitch={pitch}");
         var unmanagedBuffer = Marshal.AllocHGlobal(pixelData.Length);
         try
         {
             Marshal.Copy(pixelData, 0, unmanagedBuffer, pixelData.Length);
+            Console.WriteLine("[DBG] Calling _setImage...");
             var setImgRes = _setImage(_engineHandle, unmanagedBuffer, width, height, pitch);
+            Console.WriteLine($"[DBG] _setImage result: {setImgRes}");
             if (setImgRes != 0)
             {
                 return false;
             }
 
-            var ocrRes = _ocr(_engineHandle, (IntPtr)1);
+            Console.WriteLine("[DBG] Calling _ocr...");
+            var ocrRes = _ocr(_engineHandle);
+            Console.WriteLine($"[DBG] _ocr result: {ocrRes}");
             if (_getNbZones is not null)
             {
-                zonesCount = _getNbZones(_engineHandle);
+                try
+                {
+                    _ = _getNbZones(_engineHandle, out zonesCount);
+                    Console.WriteLine($"[DBG] _getNbZones result: {zonesCount}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DBG] _getNbZones exception: {ex.Message}");
+                    zonesCount = 0;
+                }
             }
 
             return ocrRes >= 0 || zonesCount >= 0;
+        }
+        catch
+        {
+            return false;
         }
         finally
         {
@@ -252,7 +283,8 @@ internal sealed class IdrsNativeWrapper : IDisposable
             return false;
         }
 
-        return RecognizeImageBuffer(pixelData, width, height, width, out zonesCount);
+        var pitch = ((width + 3) / 4) * 4;
+        return RecognizeImageBuffer(pixelData, width, height, pitch, out zonesCount);
     }
 
     private static bool TryReadBitmap(string imagePath, out int width, out int height, out byte[] pixels)
@@ -276,7 +308,7 @@ internal sealed class IdrsNativeWrapper : IDisposable
             _ = reader.ReadUInt16();
             var pixelOffset = reader.ReadUInt32();
             var dibHeaderSize = reader.ReadUInt32();
-            if (dibHeaderSize != 40)
+            if (dibHeaderSize < 40)
             {
                 return false;
             }
@@ -286,34 +318,39 @@ internal sealed class IdrsNativeWrapper : IDisposable
             var planes = reader.ReadUInt16();
             var bitsPerPixel = reader.ReadUInt16();
             var compression = reader.ReadUInt32();
-            if (planes != 1 || (bitsPerPixel != 24 && bitsPerPixel != 32) || compression != 0)
+            if (planes != 1 || (bitsPerPixel != 24 && bitsPerPixel != 32 && bitsPerPixel != 8) || compression != 0)
             {
                 return false;
             }
-
-            _ = reader.ReadUInt32();
-            _ = reader.ReadInt32();
-            _ = reader.ReadInt32();
-            _ = reader.ReadUInt32();
-            _ = reader.ReadUInt32();
 
             stream.Position = pixelOffset;
             var bytesPerPixel = bitsPerPixel / 8;
             var rowStride = ((width * bytesPerPixel + 3) / 4) * 4;
             var rowBuffer = new byte[rowStride];
-            var grayPixels = new byte[width * height];
+            var grayStride = ((width + 3) / 4) * 4;
+            var grayPixels = new byte[grayStride * height];
 
             for (int y = 0; y < height; y++)
             {
-                stream.Read(rowBuffer, 0, rowStride);
+                var readBytes = stream.Read(rowBuffer, 0, rowStride);
+                if (readBytes < rowStride) break;
+
                 for (int x = 0; x < width; x++)
                 {
                     var offset = x * bytesPerPixel;
-                    var b = rowBuffer[offset];
-                    var g = rowBuffer[offset + 1];
-                    var r = rowBuffer[offset + 2];
-                    var gray = (byte)((r * 77 + g * 150 + b * 29) >> 8);
-                    grayPixels[(height - 1 - y) * width + x] = gray;
+                    byte gray;
+                    if (bitsPerPixel == 8)
+                    {
+                        gray = rowBuffer[offset];
+                    }
+                    else
+                    {
+                        var b = rowBuffer[offset];
+                        var g = rowBuffer[offset + 1];
+                        var r = rowBuffer[offset + 2];
+                        gray = (byte)((r * 77 + g * 150 + b * 29) >> 8);
+                    }
+                    grayPixels[(height - 1 - y) * grayStride + x] = gray;
                 }
             }
 
