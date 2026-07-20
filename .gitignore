@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Temporary and build directories
+tmp/
+logs/
+bin/
+obj/
+.vs/
+.idea/
+.vscode/
+
+# Ignore test PDF output files if generated dynamically
+PDFS_OCR/*
+!PDFS_OCR/.gitkeep
+
+# Ignore OS files
+Thumbs.db
+Desktop.ini
+.DS_Store

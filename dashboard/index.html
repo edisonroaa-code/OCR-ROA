@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROA OCR — Dashboard</title>
+  <meta name="description" content="Panel de monitoreo para ROA OCR API — Procesamiento masivo de PDFs" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design Tokens ─────────────────────────────────────────── */
+    :root {
+      --bg:        #0b0d12;
+      --bg2:       #111420;
+      --bg3:       #171b28;
+      --surface:   #1e2236;
+      --border:    rgba(255,255,255,0.08);
+      --accent:    #6c63ff;
+      --accent2:   #a78bfa;
+      --green:     #22d3a5;
+      --red:       #f87171;
+      --yellow:    #fbbf24;
+      --blue:      #60a5fa;
+      --text:      #e2e8f0;
+      --text2:     #94a3b8;
+      --text3:     #475569;
+      --glow:      rgba(108,99,255,0.25);
+      --radius:    14px;
+      --shadow:    0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    /* ── Reset & Base ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 4px; }
+
+    /* ── Background Orbs ───────────────────────────────────────── */
+    .bg-orb {
+      position: fixed; border-radius: 50%;
+      filter: blur(80px); pointer-events: none; z-index: 0;
+    }
+    .bg-orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(108,99,255,0.12), transparent 70%);
+      top: -150px; left: -100px;
+    }
+    .bg-orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(34,211,165,0.08), transparent 70%);
+      bottom: 100px; right: -80px;
+    }
+
+    /* ── Layout ────────────────────────────────────────────────── */
+    #app { position: relative; z-index: 1; }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(11,13,18,0.8);
+      backdrop-filter: blur(20px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 20px var(--glow);
+    }
+    .logo-title {
+      font-size: 20px; font-weight: 700;
+      background: linear-gradient(135deg, var(--text), var(--accent2));
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+    }
+    .logo-sub { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .status-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(34,211,165,0.1);
+      border: 1px solid rgba(34,211,165,0.3);
+      border-radius: 999px; padding: 6px 14px;
+      font-size: 12px; font-weight: 600; color: var(--green);
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .version-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--text3);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 4px 10px; border-radius: 6px;
+    }
+
+    /* ── Main content ──────────────────────────────────────────── */
+    main { padding: 32px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── Section headers ───────────────────────────────────────── */
+    .section-title {
+      font-size: 13px; font-weight: 600;
+      color: var(--text3); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 16px;
+    }
+
+    /* ── Stats Grid ────────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      position: relative; overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(108,99,255,0.3);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+    .stat-label {
+      font-size: 12px; color: var(--text3); font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .stat-value {
+      font-size: 32px; font-weight: 800; margin: 8px 0 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stat-sub { font-size: 12px; color: var(--text2); }
+    .stat-icon {
+      position: absolute; right: 20px; top: 20px;
+      font-size: 28px; opacity: 0.15;
+    }
+    .v-green { color: var(--green); }
+    .v-blue  { color: var(--blue); }
+    .v-purple { color: var(--accent2); }
+    .v-yellow { color: var(--yellow); }
+    .v-red  { color: var(--red); }
+
+    /* ── Two columns ───────────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── Card base ─────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-title { font-size: 14px; font-weight: 600; }
+    .card-body { padding: 22px; }
+
+    /* ── Engine status ─────────────────────────────────────────── */
+    .engine-list { display: flex; flex-direction: column; gap: 12px; }
+    .engine-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .engine-info { display: flex; align-items: center; gap: 12px; }
+    .engine-icon { font-size: 20px; }
+    .engine-name { font-size: 13px; font-weight: 600; }
+    .engine-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .badge {
+      padding: 4px 12px; border-radius: 999px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-active { background: rgba(34,211,165,0.15); color: var(--green); border: 1px solid rgba(34,211,165,0.3); }
+    .badge-available { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.3); }
+    .badge-unavailable { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+    .badge-active-main { background: rgba(108,99,255,0.2); color: var(--accent2); border: 1px solid rgba(108,99,255,0.4); }
+
+    /* ── Progress bars ─────────────────────────────────────────── */
+    .bar-wrap {
+      background: var(--bg3);
+      border-radius: 999px; height: 6px; overflow: hidden; margin-top: 6px;
+    }
+    .bar-fill {
+      height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.6s ease;
+    }
+
+    /* ── Upload zone ───────────────────────────────────────────── */
+    .upload-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 32px;
+    }
+    .upload-area {
+      margin: 22px;
+      border: 2px dashed rgba(108,99,255,0.4);
+      border-radius: 12px;
+      padding: 48px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--accent);
+      background: rgba(108,99,255,0.06);
+    }
+    .upload-area input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+    .upload-icon { font-size: 48px; margin-bottom: 16px; }
+    .upload-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .upload-sub { font-size: 13px; color: var(--text3); margin-bottom: 24px; }
+
+    /* ── Options grid ──────────────────────────────────────────── */
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px; margin: 0 22px 22px;
+    }
+    .option-group label {
+      font-size: 11px; color: var(--text3); text-transform: uppercase;
+      letter-spacing: 0.5px; font-weight: 600; display: block; margin-bottom: 6px;
+    }
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px; padding: 9px 12px;
+      font-size: 13px; font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+    select:focus, input:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px;
+    }
+    .toggle-row label { font-size: 12px; color: var(--text2); margin: 0; }
+    .toggle {
+      position: relative; width: 36px; height: 20px; flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; cursor: pointer;
+      background: var(--bg3); border-radius: 20px;
+      border: 1px solid var(--border);
+      transition: 0.2s;
+    }
+    .slider:before {
+      content: ''; position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; top: 50%; transform: translateY(-50%);
+      background: var(--text3); border-radius: 50%;
+      transition: 0.2s;
+    }
+    .toggle input:checked + .slider { background: var(--accent); border-color: var(--accent); }
+    .toggle input:checked + .slider:before { transform: translateY(-50%) translateX(16px); background: white; }
+
+    /* ── Buttons ───────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 11px 24px;
+      border-radius: 10px; font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: white; box-shadow: 0 4px 15px rgba(108,99,255,0.4);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,0.5); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-ghost {
+      background: transparent; color: var(--text2);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+
+    .process-actions {
+      display: flex; gap: 12px; padding: 0 22px 22px; align-items: center;
+    }
+    .api-key-input {
+      flex: 1;
+    }
+    .api-key-input label {
+      font-size: 11px; color: var(--text3); text-transform: uppercase;
+      letter-spacing: 0.5px; font-weight: 600; display: block; margin-bottom: 6px;
+    }
+
+    /* ── Progress overlay ──────────────────────────────────────── */
+    .processing-overlay {
+      display: none; padding: 32px 22px;
+      text-align: center;
+    }
+    .processing-overlay.visible { display: block; }
+    .spin-ring {
+      width: 56px; height: 56px; margin: 0 auto 20px;
+      border-radius: 50%;
+      border: 3px solid rgba(108,99,255,0.2);
+      border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .processing-label { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .processing-sub { font-size: 13px; color: var(--text3); }
+
+    /* ── Result card ───────────────────────────────────────────── */
+    .result-card {
+      display: none;
+      margin: 0 22px 22px;
+      background: rgba(34,211,165,0.08);
+      border: 1px solid rgba(34,211,165,0.25);
+      border-radius: 12px; padding: 20px;
+    }
+    .result-card.visible { display: block; }
+    .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .result-title { font-size: 15px; font-weight: 700; color: var(--green); }
+    .result-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px; margin-bottom: 16px;
+    }
+    .result-item label { font-size: 10px; color: var(--text3); text-transform: uppercase; }
+    .result-item span { font-size: 15px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+    .error-card {
+      display: none;
+      margin: 0 22px 22px;
+      background: rgba(248,113,113,0.08);
+      border: 1px solid rgba(248,113,113,0.25);
+      border-radius: 12px; padding: 20px;
+    }
+    .error-card.visible { display: block; }
+    .error-title { font-size: 14px; font-weight: 700; color: var(--red); margin-bottom: 8px; }
+    .error-msg { font-size: 13px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Jobs table ────────────────────────────────────────────── */
+    .jobs-section { margin-bottom: 32px; }
+    .jobs-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .jobs-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .jobs-table table {
+      width: 100%; border-collapse: collapse;
+    }
+    .jobs-table thead th {
+      padding: 12px 16px;
+      text-align: left; font-size: 11px; font-weight: 600;
+      color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    .jobs-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .jobs-table tbody tr:last-child { border-bottom: none; }
+    .jobs-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+    .jobs-table td {
+      padding: 13px 16px; font-size: 13px;
+    }
+    .filename-cell {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    }
+    .s-pending { background: rgba(251,191,36,0.12); color: var(--yellow); }
+    .s-processing { background: rgba(96,165,250,0.12); color: var(--blue); }
+    .s-done { background: rgba(34,211,165,0.12); color: var(--green); }
+    .s-failed { background: rgba(248,113,113,0.12); color: var(--red); }
+    .jobs-empty {
+      padding: 48px; text-align: center; color: var(--text3); font-size: 13px;
+    }
+
+    /* ── API Docs card ─────────────────────────────────────────── */
+    .docs-card { margin-bottom: 32px; }
+    .endpoint-list { display: flex; flex-direction: column; gap: 8px; }
+    .endpoint-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .method {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 700;
+      padding: 3px 8px; border-radius: 5px; min-width: 42px; text-align: center;
+    }
+    .m-post { background: rgba(34,211,165,0.15); color: var(--green); }
+    .m-get  { background: rgba(96,165,250,0.15); color: var(--blue); }
+    .m-del  { background: rgba(248,113,113,0.15); color: var(--red); }
+    .ep-path { font-family: 'JetBrains Mono', monospace; font-size: 13px; flex: 1; }
+    .ep-desc { font-size: 12px; color: var(--text3); }
+
+    /* ── Footer ────────────────────────────────────────────────── */
+    footer {
+      text-align: center; padding: 32px;
+      color: var(--text3); font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--accent2); text-decoration: none; }
+
+    /* ── Utility ───────────────────────────────────────────────── */
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .gap-8 { gap: 8px; }
+    .gap-16 { gap: 16px; }
+    .mt-8 { margin-top: 8px; }
+    .mb-24 { margin-bottom: 24px; }
+    .text-sm { font-size: 13px; }
+    .text-muted { color: var(--text3); }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body>
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+
+  <div id="app">
+    <!-- ── Header ──────────────────────────────────────────────── -->
+    <header>
+      <div class="logo">
+        <div class="logo-icon">🐺</div>
+        <div>
+          <div class="logo-title">ROA OCR</div>
+          <div class="logo-sub">PDF Enhancement API</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-pill" id="status-pill">
+          <div class="status-dot"></div>
+          <span id="status-text">Conectando...</span>
+        </div>
+        <div class="version-badge">v2.0.0</div>
+      </div>
+    </header>
+
+    <main>
+      <!-- ── Stats ──────────────────────────────────────────────── -->
+      <p class="section-title">Métricas de sesión</p>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Procesados</div>
+          <div class="stat-value v-green" id="stat-total">—</div>
+          <div class="stat-sub">en esta sesión</div>
+          <div class="stat-icon">📄</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Exitosos</div>
+          <div class="stat-value v-blue" id="stat-ok">—</div>
+          <div class="stat-sub" id="stat-ok-pct">—</div>
+          <div class="stat-icon">✅</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Fallidos</div>
+          <div class="stat-value v-red" id="stat-fail">—</div>
+          <div class="stat-sub">errores OCR</div>
+          <div class="stat-icon">❌</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tiempo Prom.</div>
+          <div class="stat-value v-purple" id="stat-time">—</div>
+          <div class="stat-sub">segundos por PDF</div>
+          <div class="stat-icon">⏱️</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Páginas OCR</div>
+          <div class="stat-value v-yellow" id="stat-pages">—</div>
+          <div class="stat-sub">total procesadas</div>
+          <div class="stat-icon">📑</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">MB Procesados</div>
+          <div class="stat-value v-green" id="stat-mb">—</div>
+          <div class="stat-sub">volumen total</div>
+          <div class="stat-icon">💾</div>
+        </div>
+      </div>
+
+      <!-- ── Upload + Process ───────────────────────────────────── -->
+      <p class="section-title">Procesar PDFs</p>
+      <div class="upload-card mb-24">
+        <div class="card-header">
+          <div class="card-title">🔬 Subir y procesar PDFs</div>
+          <span class="text-sm text-muted">1 PDF → descarga inmediata · Varios → procesamiento en cola</span>
+        </div>
+
+        <!-- Upload zone -->
+        <div class="upload-area" id="upload-area">
+          <input type="file" id="file-input" accept=".pdf" multiple />
+          <div class="upload-icon">📄</div>
+          <div class="upload-title" id="upload-title">Arrastra tus PDFs aquí</div>
+          <div class="upload-sub">o haz clic para seleccionar • Múltiples archivos permitidos • Máximo 100MB c/u</div>
+        </div>
+        <!-- Lista de archivos seleccionados -->
+        <div id="file-list" style="display:none;margin-top:12px;display:none"></div>
+
+        <!-- Options -->
+        <div class="options-grid">
+          <div class="option-group">
+            <label>Idioma OCR</label>
+            <select id="opt-lang">
+              <option value="spa+eng">🇪🇸 Español + Inglés</option>
+              <option value="eng">🇺🇸 Solo Inglés</option>
+              <option value="spa">🇪🇸 Solo Español</option>
+              <option value="fra+eng">🇫🇷 Francés + Inglés</option>
+              <option value="por+eng">🇧🇷 Portugués + Inglés</option>
+              <option value="deu+eng">🇩🇪 Alemán + Inglés</option>
+              <option value="ita+eng">🇮🇹 Italiano + Inglés</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>Motor OCR</label>
+            <select id="opt-engine">
+              <option value="auto">⚡ Automático</option>
+              <option value="acrobat">🎯 Acrobat (iDRS15)</option>
+              <option value="ocrmypdf">🔧 ocrmypdf</option>
+              <option value="tesseract">🔬 Tesseract</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>Calidad salida</label>
+            <select id="opt-quality">
+              <option value="printer">🖨️ Impresión (300dpi)</option>
+              <option value="prepress">🎨 Preprensa (alta cal.)</option>
+              <option value="ebook">📱 eBook (150dpi)</option>
+              <option value="screen">💻 Pantalla (72dpi)</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>DPI procesamiento</label>
+            <select id="opt-dpi">
+              <option value="300">300 DPI (recomendado)</option>
+              <option value="400">400 DPI (alta calidad)</option>
+              <option value="200">200 DPI (rápido)</option>
+            </select>
+          </div>
+          <div class="option-group" style="display:flex;flex-direction:column;gap:8px;justify-content:center">
+            <div class="toggle-row">
+              <label>Saltar si tiene texto</label>
+              <label class="toggle">
+                <input type="checkbox" id="opt-skip" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <label>Corrección post-OCR</label>
+              <label class="toggle">
+                <input type="checkbox" id="opt-correct" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <label>Optimizar / comprimir</label>
+              <label class="toggle">
+                <input type="checkbox" id="opt-optimize" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- API Key + Process button -->
+        <div class="process-actions">
+          <div class="api-key-input">
+            <label>API Key</label>
+            <input type="text" id="api-key" placeholder="roa-dev-key-2024" value="roa-dev-key-2024" />
+          </div>
+          <div style="padding-top:20px">
+            <button class="btn btn-primary" id="btn-process" onclick="processPDFs()" disabled>
+              🚀 Procesar PDF(s)
+            </button>
+          </div>
+        </div>
+
+        <!-- Processing state -->
+        <div class="processing-overlay" id="processing-overlay">
+          <div class="spin-ring"></div>
+          <div class="processing-label" id="processing-label">Procesando PDF...</div>
+          <div class="processing-sub" id="processing-sub">Iniciando pipeline OCR</div>
+        </div>
+
+        <!-- Result -->
+        <div class="result-card" id="result-card">
+          <div class="result-header">
+            <span style="font-size:20px">✅</span>
+            <div class="result-title">PDF procesado correctamente</div>
+          </div>
+          <div class="result-grid" id="result-grid"></div>
+          <button class="btn btn-primary" id="btn-download" onclick="downloadResult()">
+            ⬇️ Descargar PDF mejorado
+          </button>
+        </div>
+
+        <!-- Error -->
+        <div class="error-card" id="error-card">
+          <div class="error-title">❌ Error al procesar</div>
+          <div class="error-msg" id="error-msg"></div>
+        </div>
+      </div>
+
+      <!-- ── Engine status + API Docs ───────────────────────────── -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⚙️ Motores OCR</div>
+            <button class="btn btn-ghost" style="padding:6px 14px;font-size:12px" onclick="loadHealth()">↺ Refresh</button>
+          </div>
+          <div class="card-body">
+            <div class="engine-list" id="engine-list">
+              <div class="text-muted text-sm">Cargando...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📚 Endpoints API</div>
+            <a href="/docs" target="_blank" class="btn btn-ghost" style="padding:6px 14px;font-size:12px">Swagger ↗</a>
+          </div>
+          <div class="card-body">
+            <div class="endpoint-list">
+              <div class="endpoint-item">
+                <span class="method m-post">POST</span>
+                <span class="ep-path">/api/v1/process</span>
+                <span class="ep-desc">PDF individual</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="method m-post">POST</span>
+                <span class="ep-path">/api/v1/process/async</span>
+                <span class="ep-desc">PDF async</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="method m-post">POST</span>
+                <span class="ep-path">/api/v1/batch</span>
+                <span class="ep-desc">Lote multifile</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="method m-post">POST</span>
+                <span class="ep-path">/api/v1/batch/paths</span>
+                <span class="ep-desc">Lote por rutas</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="method m-get">GET</span>
+                <span class="ep-path">/api/v1/jobs/{id}</span>
+                <span class="ep-desc">Estado job</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="method m-get">GET</span>
+                <span class="ep-path">/api/v1/jobs/{id}/download</span>
+                <span class="ep-desc">Descargar resultado</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="method m-get">GET</span>
+                <span class="ep-path">/api/v1/health</span>
+                <span class="ep-desc">Health check</span>
+              </div>
+              <div class="endpoint-item">
+                <span class="method m-get">GET</span>
+                <span class="ep-path">/api/v1/stats</span>
+                <span class="ep-desc">Estadísticas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Jobs table ─────────────────────────────────────────── -->
+      <div class="jobs-section">
+        <div class="jobs-header">
+          <p class="section-title" style="margin:0">Cola de jobs</p>
+          <div style="display:flex;gap:8px">
+            <select id="filter-status" onchange="loadJobs()" style="width:auto;padding:6px 12px;font-size:12px">
+              <option value="">Todos</option>
+              <option value="pending">Pendientes</option>
+              <option value="processing">Procesando</option>
+              <option value="done">Completados</option>
+              <option value="failed">Fallidos</option>
+            </select>
+            <button class="btn btn-ghost" style="padding:6px 14px;font-size:12px" onclick="loadJobs()">↺ Refresh</button>
+          </div>
+        </div>
+        <div class="jobs-table">
+          <table>
+            <thead>
+              <tr>
+                <th>JOB ID</th>
+                <th>ARCHIVO</th>
+                <th>ESTADO</th>
+                <th>MOTOR</th>
+                <th>PÁGINAS</th>
+                <th>TIEMPO</th>
+                <th>COMPRESIÓN</th>
+                <th>ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody id="jobs-tbody">
+              <tr><td colspan="8" class="jobs-empty">No hay jobs aún. Sube un PDF para empezar.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      🐺 <strong>ROA OCR API v2.0</strong> — Motor iDRS15 + Tesseract | 84 idiomas | Procesamiento masivo
+      &nbsp;·&nbsp; <a href="/docs">Swagger UI</a>
+      &nbsp;·&nbsp; <a href="/redoc">ReDoc</a>
+    </footer>
+  </div>
+
+  <script>
+    // ── State ──────────────────────────────────────────────────────
+    let selectedFiles = [];       // Array de File
+    let lastResultBlob = null;
+    let lastResultFilename = '';
+    let apiKey = () => document.getElementById('api-key').value || 'roa-dev-key-2024';
+    let refreshInterval = null;
+
+    // ── File selection ─────────────────────────────────────────────
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput  = document.getElementById('file-input');
+    const btnProcess = document.getElementById('btn-process');
+    const uploadTitle= document.getElementById('upload-title');
+
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+      if (files.length) selectFiles(files);
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('drag-over');
+    });
+    uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+      const files = Array.from(e.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.pdf'));
+      if (files.length) selectFiles(files);
+      else showToast('Solo se aceptan archivos PDF', 'error');
+    });
+
+    function selectFiles(files) {
+      selectedFiles = files;
+      const n = files.length;
+      const totalMB = (files.reduce((s, f) => s + f.size, 0) / 1024 / 1024).toFixed(1);
+      if (n === 1) {
+        uploadTitle.textContent = `📄 ${files[0].name} (${(files[0].size/1024/1024).toFixed(1)} MB)`;
+      } else {
+        uploadTitle.textContent = `📦 ${n} archivos seleccionados (${totalMB} MB total)`;
+      }
+      // Renderizar lista
+      const listEl = document.getElementById('file-list');
+      listEl.style.display = 'flex';
+      listEl.style.flexDirection = 'column';
+      listEl.style.gap = '4px';
+      listEl.innerHTML = files.map((f, i) => `
+        <div id="file-row-${i}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg3);border-radius:8px;font-size:12px">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${f.name}">📄 ${f.name}</span>
+          <span style="color:var(--text3)">${(f.size/1024).toFixed(0)} KB</span>
+          <span id="file-status-${i}" style="font-size:11px;color:var(--text3)">⏳ Pendiente</span>
+        </div>
+      `).join('');
+      btnProcess.disabled = false;
+      hideResult();
+    }
+
+    // ── Process PDFs ───────────────────────────────────────────────
+    async function processPDFs() {
+      if (!selectedFiles.length) return;
+
+      if (selectedFiles.length === 1) {
+        await processSingle(selectedFiles[0]);
+      } else {
+        await processBatch(selectedFiles);
+      }
+    }
+
+    // Un solo PDF → sincrónico, descarga directa
+    async function processSingle(file) {
+      showProcessing('Procesando PDF...');
+      hideResult();
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('lang', document.getElementById('opt-lang').value);
+      formData.append('engine', document.getElementById('opt-engine').value);
+      formData.append('dpi', document.getElementById('opt-dpi').value);
+      formData.append('compress_quality', document.getElementById('opt-quality').value);
+      formData.append('skip_if_has_text', document.getElementById('opt-skip').checked);
+      formData.append('run_correction', document.getElementById('opt-correct').checked);
+      formData.append('optimize', document.getElementById('opt-optimize').checked);
+
+      const msgs = ['Analizando PDF...','Aplicando OCR...','Corrigiendo texto...','Optimizando...','Preparando resultado...'];
+      let mi = 0;
+      const iv = setInterval(() => {
+        if (mi < msgs.length) document.getElementById('processing-sub').textContent = msgs[mi++];
+      }, 2000);
+
+      try {
+        const resp = await fetch('/api/v1/process', {
+          method: 'POST',
+          headers: { 'X-API-Key': apiKey() },
+          body: formData,
+        });
+        clearInterval(iv);
+        if (resp.ok) {
+          const blob = await resp.blob();
+          lastResultBlob = blob;
+          lastResultFilename = `roa_${file.name}`;
+          const engine   = resp.headers.get('X-Engine-Used') || '—';
+          const pages    = resp.headers.get('X-Pages') || '—';
+          const procTime = resp.headers.get('X-Processing-Time') || '—';
+          showResult({
+            'Motor': engine, 'Páginas': pages,
+            'Tiempo': `${parseFloat(procTime).toFixed(1)}s`,
+            'Tamaño orig.': `${(file.size/1024).toFixed(0)} KB`,
+            'Tamaño final': `${(blob.size/1024).toFixed(0)} KB`,
+            'Reducción': `${Math.round((1 - blob.size/file.size)*100)}%`,
+          });
+          loadJobs(); loadStats();
+        } else {
+          const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+          showError(err.detail || 'Error desconocido');
+        }
+      } catch (e) {
+        clearInterval(iv);
+        showError(`Error de red: ${e.message}`);
+      } finally {
+        hideProcessing();
+      }
+    }
+
+    // Varios PDFs → batch async, cola de jobs con descarga individual
+    async function processBatch(files) {
+      showProcessing(`Encolando ${files.length} PDFs...`);
+      hideResult();
+
+      const formData = new FormData();
+      files.forEach(f => formData.append('files', f));
+      formData.append('lang',           document.getElementById('opt-lang').value);
+      formData.append('optimize',       document.getElementById('opt-optimize').checked);
+      formData.append('run_correction', document.getElementById('opt-correct').checked);
+
+      try {
+        const resp = await fetch('/api/v1/batch', {
+          method: 'POST',
+          headers: { 'X-API-Key': apiKey() },
+          body: formData,
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+          showError(err.detail || 'Error al encolar batch');
+          hideProcessing();
+          return;
+        }
+
+        const data = await resp.json();
+        hideProcessing();
+        showToast(`✅ ${data.total_files} PDFs encolados. Batch ID: ${data.batch_id.substring(0,8)}…`);
+
+        // Monitorear progreso en la lista de archivos
+        monitorBatch(data.batch_id, data.job_ids, files);
+        loadJobs();
+
+      } catch (e) {
+        hideProcessing();
+        showError(`Error de red: ${e.message}`);
+      }
+    }
+
+    // Monitorea el batch y actualiza la lista de archivos con estado/descarga
+    async function monitorBatch(batchId, jobIds, files) {
+      const maxWait = 600000; // 10 min
+      const start = Date.now();
+      const done = new Set();
+
+      const poll = async () => {
+        if (Date.now() - start > maxWait) return;
+
+        try {
+          const resp = await fetch(`/api/v1/batch/${batchId}`, {
+            headers: { 'X-API-Key': apiKey() }
+          });
+          if (!resp.ok) return;
+          const data = await resp.json();
+
+          // Actualizar cada fila
+          jobIds.forEach((jid, i) => {
+            const jobInfo = data.jobs && data.jobs[jid];
+            if (!jobInfo) return;
+            const statusEl = document.getElementById(`file-status-${i}`);
+            if (!statusEl) return;
+
+            if (jobInfo.status === 'done' && !done.has(jid)) {
+              done.add(jid);
+              const dlUrl = `/api/v1/jobs/${jid}/download`;
+              statusEl.innerHTML = `✅ Listo · <a href="${dlUrl}?X-API-Key=${apiKey()}" download style="color:var(--accent2)">⬇ Descargar</a>`;
+            } else if (jobInfo.status === 'failed') {
+              statusEl.innerHTML = `<span style="color:var(--red)">❌ ${jobInfo.error || 'Falló'}</span>`;
+              done.add(jid);
+            } else if (jobInfo.status === 'processing') {
+              statusEl.textContent = '⚙️ Procesando...';
+            } else if (jobInfo.status === 'pending') {
+              statusEl.textContent = '⏳ En cola...';
+            }
+          });
+
+          loadJobs(); loadStats();
+
+          if (done.size < jobIds.length) {
+            setTimeout(poll, 2000);
+          } else {
+            showToast(`🎉 Todos los PDFs procesados (${done.size}/${jobIds.length})`);
+          }
+        } catch (e) {
+          setTimeout(poll, 3000);
+        }
+      };
+
+      setTimeout(poll, 1500);
+    }
+
+    function downloadResult() {
+      if (!lastResultBlob) return;
+      const url = URL.createObjectURL(lastResultBlob);
+      const a = document.createElement('a');
+      a.href = url; a.download = lastResultFilename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── UI helpers ─────────────────────────────────────────────────
+    function showProcessing(label) {
+      if (label) document.getElementById('processing-label').textContent = label;
+      document.getElementById('processing-overlay').classList.add('visible');
+      btnProcess.disabled = true;
+    }
+    function hideProcessing() {
+      document.getElementById('processing-overlay').classList.remove('visible');
+      btnProcess.disabled = false;
+    }
+    function showResult(data) {
+      const card = document.getElementById('result-card');
+      const grid = document.getElementById('result-grid');
+      grid.innerHTML = Object.entries(data).map(([k, v]) => `
+        <div class="result-item">
+          <label>${k}</label><br>
+          <span>${v}</span>
+        </div>
+      `).join('');
+      card.classList.add('visible');
+      document.getElementById('error-card').classList.remove('visible');
+    }
+    function showError(msg) {
+      document.getElementById('error-msg').textContent = msg;
+      document.getElementById('error-card').classList.add('visible');
+      document.getElementById('result-card').classList.remove('visible');
+    }
+    function hideResult() {
+      document.getElementById('result-card').classList.remove('visible');
+      document.getElementById('error-card').classList.remove('visible');
+    }
+
+    // ── Health & Engines ───────────────────────────────────────────
+    async function loadHealth() {
+      try {
+        const resp = await fetch('/api/v1/health');
+        const data = await resp.json();
+
+        // Status pill
+        const pill = document.getElementById('status-pill');
+        const statusText = document.getElementById('status-text');
+        if (data.status === 'ok') {
+          pill.style.background = 'rgba(34,211,165,0.1)';
+          statusText.textContent = `Online · ${Math.round(data.uptime_s)}s uptime`;
+        } else {
+          pill.style.background = 'rgba(248,113,113,0.1)';
+          pill.style.borderColor = 'rgba(248,113,113,0.3)';
+          statusText.textContent = 'Degraded';
+        }
+
+        // Engine list
+        const engineList = document.getElementById('engine-list');
+        const engines = data.engines || {};
+        const engineMeta = {
+          acrobat:   { icon: '🎯', name: 'Acrobat iDRS15', desc: 'Motor comercial (99%+ precisión)' },
+          ocrmypdf:  { icon: '🔧', name: 'ocrmypdf', desc: 'Tesseract + Ghostscript (open-source)' },
+          tesseract: { icon: '🔬', name: 'Tesseract directo', desc: 'Fallback base (sin Ghostscript)' },
+        };
+        const queueBadge = data.queue_available
+          ? '<span class="badge badge-active">Redis ✓</span>'
+          : '<span class="badge badge-unavailable">Threading</span>';
+
+        engineList.innerHTML = Object.entries(engineMeta).map(([key, meta]) => {
+          const available = engines[key];
+          let badgeClass, badgeText;
+          if (available) {
+            badgeClass = 'badge-active'; badgeText = '✓ Disponible';
+          } else {
+            badgeClass = 'badge-unavailable'; badgeText = '✗ No disponible';
+          }
+          return `
+          <div class="engine-item">
+            <div class="engine-info">
+              <span class="engine-icon">${meta.icon}</span>
+              <div>
+                <div class="engine-name">${meta.name}</div>
+                <div class="engine-desc">${meta.desc}</div>
+              </div>
+            </div>
+            <span class="badge ${badgeClass}">${badgeText}</span>
+          </div>`;
+        }).join('') + `
+        <div class="engine-item">
+          <div class="engine-info">
+            <span class="engine-icon">📬</span>
+            <div>
+              <div class="engine-name">Cola de tareas</div>
+              <div class="engine-desc">Celery + Redis o Threading local</div>
+            </div>
+          </div>
+          ${queueBadge}
+        </div>`;
+      } catch (e) {
+        document.getElementById('status-text').textContent = 'Desconectado';
+        document.getElementById('engine-list').innerHTML =
+          '<div class="text-muted text-sm">No se pudo conectar con el servidor</div>';
+      }
+    }
+
+    // ── Stats ──────────────────────────────────────────────────────
+    async function loadStats() {
+      try {
+        const resp = await fetch('/api/v1/stats', {
+          headers: { 'X-API-Key': apiKey() }
+        });
+        if (!resp.ok) return;
+        const d = await resp.json();
+        document.getElementById('stat-total').textContent = d.total_processed ?? '—';
+        document.getElementById('stat-ok').textContent = d.total_success ?? '—';
+        const pct = d.total_processed > 0
+          ? Math.round(d.total_success / d.total_processed * 100)
+          : 0;
+        document.getElementById('stat-ok-pct').textContent = `${pct}% tasa de éxito`;
+        document.getElementById('stat-fail').textContent = d.total_failed ?? '—';
+        document.getElementById('stat-time').textContent =
+          d.avg_processing_time_s != null ? `${d.avg_processing_time_s}s` : '—';
+        document.getElementById('stat-pages').textContent =
+          d.total_pages_processed?.toLocaleString() ?? '—';
+        document.getElementById('stat-mb').textContent =
+          d.total_mb_processed != null ? `${d.total_mb_processed} MB` : '—';
+      } catch (e) {/* sin auth o sin jobs aún */}
+    }
+
+    // ── Jobs ───────────────────────────────────────────────────────
+    async function loadJobs() {
+      const filter = document.getElementById('filter-status').value;
+      const url = `/api/v1/jobs?limit=20${filter ? '&status=' + filter : ''}`;
+      try {
+        const resp = await fetch(url, { headers: { 'X-API-Key': apiKey() } });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        renderJobs(data.jobs || []);
+      } catch (e) {}
+    }
+
+    function renderJobs(jobs) {
+      const tbody = document.getElementById('jobs-tbody');
+      if (!jobs.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="jobs-empty">No hay jobs. Sube un PDF para empezar.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = jobs.map(j => {
+        const statusClass = { pending: 's-pending', processing: 's-processing', done: 's-done', failed: 's-failed' }[j.status] || 's-pending';
+        const statusIcon  = { pending: '⏳', processing: '⚙️', done: '✅', failed: '❌', cancelled: '🚫' }[j.status] || '?';
+        const comp = j.compression_ratio ? `${Math.round((1 - j.compression_ratio) * 100)}%` : '—';
+        const shortId = j.job_id?.substring(0, 8) + '…';
+        const downloadBtn = j.status === 'done'
+          ? `<a class="btn btn-ghost" style="padding:5px 10px;font-size:11px" href="/api/v1/jobs/${j.job_id}/download?X-API-Key=${apiKey()}" download>⬇</a>`
+          : '';
+        return `<tr>
+          <td class="font-mono" style="font-size:11px;color:var(--text3)">${shortId}</td>
+          <td class="filename-cell" title="${j.original_filename}">${j.original_filename || '—'}</td>
+          <td><span class="status-badge ${statusClass}">${statusIcon} ${j.status}</span></td>
+          <td class="font-mono" style="font-size:12px">${j.engine_used || '—'}</td>
+          <td>${j.pages || '—'}</td>
+          <td>${j.processing_time_s ? j.processing_time_s.toFixed(1) + 's' : '—'}</td>
+          <td>${comp}</td>
+          <td>${downloadBtn}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── Toast ──────────────────────────────────────────────────────
+    function showToast(msg, type = 'info') {
+      const t = document.createElement('div');
+      t.textContent = msg;
+      Object.assign(t.style, {
+        position: 'fixed', bottom: '24px', right: '24px', zIndex: '9999',
+        background: type === 'error' ? 'rgba(248,113,113,0.9)' : 'rgba(34,211,165,0.9)',
+        color: 'white', padding: '12px 20px', borderRadius: '10px',
+        fontSize: '13px', fontWeight: '600',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+        animation: 'slideIn 0.3s ease',
+      });
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    // ── Init ───────────────────────────────────────────────────────
+    function init() {
+      loadHealth();
+      loadStats();
+      loadJobs();
+
+      // Auto-refresh cada 5s
+      refreshInterval = setInterval(() => {
+        loadHealth();
+        loadStats();
+        loadJobs();
+      }, 5000);
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

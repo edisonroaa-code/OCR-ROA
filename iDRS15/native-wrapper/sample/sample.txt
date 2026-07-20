@@ -1,0 +1,2 @@
+Este archivo es un placeholder para la imagen de prueba.
+Coloca aquí una imagen real en formato BMP, PNG o TIFF para que el flujo mínimo de OCR pueda consumirla.

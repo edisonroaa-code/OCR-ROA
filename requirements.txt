@@ -1,0 +1,40 @@
+# ROA OCR API Platform — Dependencies
+# Install with: pip install -r requirements.txt
+
+# === API Framework ===
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+
+# === Task Queue ===
+celery==5.4.0
+redis==5.0.7
+
+# === PDF Processing ===
+pypdf==4.2.0
+ocrmypdf==16.4.0
+pytesseract==0.3.10
+Pillow==10.3.0
+pdf2image==1.17.0
+
+# === Text Correction ===
+language-tool-python==2.7.1
+pyspellchecker==0.8.1
+
+# === Data Models & Validation ===
+pydantic==2.7.1
+pydantic-settings==2.3.1
+
+# === Utilities ===
+aiofiles==23.2.1
+python-dotenv==1.0.1
+psutil==5.9.8
+tqdm==4.66.4
+structlog==24.2.0
+
+# === Windows COM (opcional, para motor iDRS15 via Acrobat) ===
+pywin32==306; sys_platform == "win32"
+comtypes==1.4.4; sys_platform == "win32"
+
+# === Dev / Testing ===
+httpx==0.27.0
