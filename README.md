@@ -69,7 +69,7 @@ flowchart TD
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/your-username/roa-ocr.git
+git clone https://github.com/edisonroaa-code/OCR-ROA.git
 cd roa-ocr
 pip install -e .
 ```
