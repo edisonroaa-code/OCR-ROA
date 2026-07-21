@@ -5,7 +5,7 @@ try:
 except Exception as e:
     print('pefile import failed:', e)
     raise SystemExit(1)
-root = Path(r'd:\APLICATIVOS\ROA OCR\iDRS15')
+root = Path(r'd:\APLICATIVOS\ROA OCR\ER296')
 for dll in sorted(root.glob('*.dll')):
     print('===', dll.name, '===')
     try:

@@ -567,7 +567,7 @@
             <label>Motor OCR</label>
             <select id="opt-engine">
               <option value="auto">⚡ Automático</option>
-              <option value="acrobat">🎯 Acrobat (iDRS15)</option>
+              <option value="er296">🚀 Motor ER296</option>
               <option value="ocrmypdf">🔧 ocrmypdf</option>
               <option value="tesseract">🔬 Tesseract</option>
             </select>
@@ -757,7 +757,7 @@
     </main>
 
     <footer>
-      🐺 <strong>ROA OCR API v2.0</strong> — Motor iDRS15 + Tesseract | 84 idiomas | Procesamiento masivo
+      🐺 <strong>ROA OCR API v2.0</strong> — Motor ER296 + Tesseract | 84 idiomas | Procesamiento masivo
       &nbsp;·&nbsp; <a href="/docs">Swagger UI</a>
       &nbsp;·&nbsp; <a href="/redoc">ReDoc</a>
     </footer>
@@ -1040,7 +1040,7 @@
         const engineList = document.getElementById('engine-list');
         const engines = data.engines || {};
         const engineMeta = {
-          acrobat:   { icon: '🎯', name: 'Acrobat iDRS15', desc: 'Motor comercial (99%+ precisión)' },
+          er296:     { icon: '🚀', name: 'Motor ER296', desc: 'Motor principal (99%+ precisión)' },
           ocrmypdf:  { icon: '🔧', name: 'ocrmypdf', desc: 'Tesseract + Ghostscript (open-source)' },
           tesseract: { icon: '🔬', name: 'Tesseract directo', desc: 'Fallback base (sin Ghostscript)' },
         };

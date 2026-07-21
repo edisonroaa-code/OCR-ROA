@@ -81,6 +81,7 @@ class PDFPipeline:
         engine: Optional[UnifiedOCREngine] = None,
         corrector: Optional[PostOCRCorrector] = None,
         optimizer: Optional[PDFOptimizer] = None,
+        er296_dir: Optional[Path] = None,
         idrs_dir: Optional[Path] = None,
     ):
         self.config = config or PipelineConfig()
@@ -88,6 +89,7 @@ class PDFPipeline:
         # Motor OCR
         self.engine = engine or UnifiedOCREngine(
             preferred=self.config.ocr_engine,
+            er296_dir=er296_dir,
             idrs_dir=idrs_dir,
             lang=self.config.lang,
             dpi=self.config.dpi,

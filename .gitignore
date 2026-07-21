@@ -7,8 +7,9 @@ env/
 venv/
 *.egg-info/
 .pytest_cache/
+.env
 
-# Temporary and build directories
+# Build & Temporary directories
 tmp/
 logs/
 bin/
@@ -17,7 +18,9 @@ obj/
 .idea/
 .vscode/
 
-# Ignore test PDF output files if generated dynamically
+# Ignore PDF input/output content (keep folders)
+PDFS_PENDIENTES/*
+!PDFS_PENDIENTES/.gitkeep
 PDFS_OCR/*
 !PDFS_OCR/.gitkeep
 

@@ -1,8 +1,8 @@
 """
 ROA OCR v2.0 — Sistema Inteligente de Procesamiento & OCR
 =========================================================
-Motor principal: iDRS15 Nativo
-Motor secundario: Cascadas (ocrmypdf -> Tesseract -> Acrobat COM)
+Motor principal: ER296 Nativo
+Motor secundario: Cascadas (ocrmypdf -> Tesseract)
 """
 import os
 import sys
@@ -42,7 +42,7 @@ log = logging.getLogger("ROA_OCR")
 def main():
     print("=" * 65)
     print("  ROA OCR v2.0 — Sistema Inteligente de Procesamiento & OCR")
-    print("  Motor Principal: iDRS15 Nativo (x64 Engine)")
+    print("  Motor Principal: ER296 Nativo (x64 Engine)")
     print("=" * 65)
     print(f"📁 Directorio Trabajo: {settings.base_dir}")
     print(f"📁 PDFS Pendientes:   {settings.input_dir}")
@@ -62,7 +62,7 @@ def main():
         ocr_engine=settings.ocr_engine,
     )
 
-    pipeline = PDFPipeline(config=pipeline_config, idrs_dir=settings.idrs_dir)
+    pipeline = PDFPipeline(config=pipeline_config, er296_dir=settings.er296_dir)
 
     try:
         active_engine = pipeline.initialize()

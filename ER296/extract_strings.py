@@ -1,6 +1,6 @@
 from pathlib import Path
 import re
-root = Path(r'd:\APLICATIVOS\ROA OCR\iDRS15')
+root = Path(r'd:\APLICATIVOS\ROA OCR\ER296')
 for path in sorted(root.glob('*.dll')):
     data = path.read_bytes()
     strings = re.findall(rb'[\x20-\x7e]{4,}', data)

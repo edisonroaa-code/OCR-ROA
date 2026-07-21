@@ -173,7 +173,7 @@ async def _run_pipeline(src: Path, dst: Path, options: ProcessOptions) -> dict:
             ocr_engine=options.engine.value,
             metadata=options.metadata,
         )
-        pipeline = PDFPipeline(config=config, idrs_dir=settings.idrs_dir)
+        pipeline = PDFPipeline(config=config, er296_dir=settings.er296_dir)
         pipeline.initialize()
         result = pipeline.process(src, dst)
         pipeline.shutdown()

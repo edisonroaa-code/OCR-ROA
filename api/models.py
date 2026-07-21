@@ -9,7 +9,8 @@ from pydantic import BaseModel, Field
 
 class OCREngine(str, Enum):
     AUTO = "auto"
-    ACROBAT = "acrobat"
+    ER296 = "er296"
+    IDRS15 = "idrs15"
     OCRMYPDF = "ocrmypdf"
     TESSERACT = "tesseract"
 

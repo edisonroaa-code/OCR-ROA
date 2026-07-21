@@ -2,7 +2,7 @@
 
 ## Visión General
 
-Sistema de OCR masivo basado en el motor **ROAOCR (iDRS15)**,
+Sistema de OCR masivo basado en el motor **ROAOCR (ER296)**,
 con ingeniería inversa para crear un wrapper open-source.
 
 ## Arquitectura
@@ -10,7 +10,7 @@ con ingeniería inversa para crear un wrapper open-source.
 ```
 ROA OCR/
 │
-├── iDRS15/                          ← Core OCR Engine (copia de trabajo)
+├── ER296/                           ← Core OCR Engine (copia de trabajo)
 │   ├── idrsocr15.dll                ← Motor principal de reconocimiento (15MB)
 │   ├── idrskrn15.dll                ← Kernel de procesamiento
 │   ├── idrsdocout15.dll             ← Generación de documento OCR
@@ -34,9 +34,9 @@ ROA OCR/
 │   ├── ACE.dll                      ← ROAOCR Core Engine
 │   ├── AGM.dll                      ← ROAOCR Graphics Model
 │   ├── AIDE.dll                     ← ROAOCR Image Data Engine
-│   ├── AdobePDFL.dll                ← ROAOCR PDF Library (nomenclatura original)
+│   ├── AdobePDFL.dll                ← ROAOCR PDF Library
 │   ├── CoolType.dll                 ← ROAOCR Font Engine
-│   ├── AdobeLinguistic.dll          ← ROAOCR Linguistic (nomenclatura original)
+│   ├── AdobeLinguistic.dll          ← ROAOCR Linguistic
 │   └── OCRLibraryInf.dll            ← Interfaz OCR Library
 │
 ├── roa_ocr.py                       ← Wrapper Python (en desarrollo)

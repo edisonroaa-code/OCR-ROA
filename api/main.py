@@ -96,7 +96,7 @@ app = FastAPI(
         "## 🐺 ROA OCR — PDF Enhancement & Correction API\n\n"
         "Plataforma especializada en mejora y corrección masiva de PDFs.\n\n"
         "### Características\n"
-        "- **OCR de alta precisión**: Motor iDRS15 via Acrobat COM + Tesseract fallback\n"
+        "- **OCR de alta precisión**: Motor ER296 Nativo + Tesseract fallback\n"
         "- **Corrección post-OCR**: 250+ reglas para español e inglés\n"
         "- **Optimización**: Compresión Ghostscript, metadatos, linearización\n"
         "- **Procesamiento masivo**: Queue async con Celery+Redis o threading\n"

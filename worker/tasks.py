@@ -100,7 +100,7 @@ def _execute_job(job_id: str):
 
         _update_job(job_id, progress=0.1)
 
-        pipeline = PDFPipeline(config=config, idrs_dir=settings.idrs_dir)
+        pipeline = PDFPipeline(config=config, er296_dir=settings.er296_dir)
         pipeline.initialize()
 
         _update_job(job_id, progress=0.2)

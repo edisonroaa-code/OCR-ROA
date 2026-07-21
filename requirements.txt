@@ -32,7 +32,7 @@ psutil==5.9.8
 tqdm==4.66.4
 structlog==24.2.0
 
-# === Windows COM (opcional, para motor iDRS15 via Acrobat) ===
+# === Windows COM (opcional para integraciones Windows) ===
 pywin32==306; sys_platform == "win32"
 comtypes==1.4.4; sys_platform == "win32"
 

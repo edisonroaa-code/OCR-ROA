@@ -6,7 +6,7 @@ import ctypes
 import struct
 import os
 
-BASE = r"C:\Users\Usuario\Desktop\ROA OCR"
+BASE = os.path.dirname(os.path.abspath(__file__))
 
 def analizar_dll(nombre, ruta):
     print(f"\n{'='*60}")
@@ -118,10 +118,10 @@ def analizar_dll(nombre, ruta):
         return None
 
 # Analizar las DLLs principales
-analizar_dll("idrsocr15.dll", os.path.join(BASE, "iDRS15", "idrsocr15.dll"))
-analizar_dll("idrskrn15.dll", os.path.join(BASE, "iDRS15", "idrskrn15.dll"))
-analizar_dll("idrsimp15.dll", os.path.join(BASE, "iDRS15", "idrsimp15.dll"))
-analizar_dll("idrsdocout15.dll", os.path.join(BASE, "iDRS15", "idrsdocout15.dll"))
-analizar_dll("idrsprepro15.dll", os.path.join(BASE, "iDRS15", "idrsprepro15.dll"))
+analizar_dll("idrsocr15.dll", os.path.join(BASE, "ER296", "idrsocr15.dll"))
+analizar_dll("idrskrn15.dll", os.path.join(BASE, "ER296", "idrskrn15.dll"))
+analizar_dll("idrsimp15.dll", os.path.join(BASE, "ER296", "idrsimp15.dll"))
+analizar_dll("idrsdocout15.dll", os.path.join(BASE, "ER296", "idrsdocout15.dll"))
+analizar_dll("idrsprepro15.dll", os.path.join(BASE, "ER296", "idrsprepro15.dll"))
 
 input("\nPresiona Enter para salir...")

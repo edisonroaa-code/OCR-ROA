@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "roa-ocr"
+version = "2.1.0"
+authors = [
+  { name="ROA OCR Team", email="soporte@roa.ai" },
+]
+description = "Ultra-Fast Native OCR Engine & PDF Enhancement Pipeline for LLMs & RAG"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+    "Topic :: Text Processing :: Indexing",
+]
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn>=0.30.1",
+    "pydantic>=2.7.4",
+    "pydantic-settings>=2.3.3",
+    "Pillow>=10.3.0",
+    "pdf2image>=1.17.0",
+    "pypdf>=4.2.0",
+    "pytesseract>=0.3.10",
+]
+
+[project.scripts]
+roa-ocr = "roa_ocr:main"
+
+[tool.setuptools.packages.find]
+where = ["."]

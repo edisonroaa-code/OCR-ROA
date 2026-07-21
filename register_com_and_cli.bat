@@ -5,9 +5,10 @@ echo =================================================================
 echo   Instalador de ROA OCR CLI v2.0 y Servidor COM (iDRS15)
 echo =================================================================
 
-set WORKSPACE=D:\APLICATIVOS\ROA OCR
-set PROJECT_DIR=D:\APLICATIVOS\ROA OCR\iDRS15\IdrsComBridge
-set COM_HOST=D:\APLICATIVOS\ROA OCR\iDRS15\IdrsComBridge\bin\Release\net8.0\IdrsComBridge.comhost.dll
+set WORKSPACE=%~dp0
+set WORKSPACE=%WORKSPACE:~0,-1%
+set PROJECT_DIR=%WORKSPACE%\ER296\Er296ComBridge
+set COM_HOST=%WORKSPACE%\ER296\Er296ComBridge\bin\Release\net8.0\IdrsComBridge.comhost.dll
 
 :: 1. Compilar proyecto COM Bridge si es necesario
 echo [+] Verificando compilacion del servidor COM...

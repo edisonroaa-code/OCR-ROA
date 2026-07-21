@@ -1,7 +1,7 @@
 """
-ROA OCR — Motor iDRS15 Nativo
+ROA OCR — Motor ER296 Nativo
 ==============================
-Motor nativo iDRS15 (x64) integrado mediante P/Invoke y ctypes.
+Motor nativo ER296 (x64) integrado mediante P/Invoke y ctypes.
 Resuelve la inicialización nativa y la inyección de mock logger vtable en [engine + 0x5058]
 para prevenir AccessViolationException.
 """
@@ -13,7 +13,7 @@ import logging
 from pathlib import Path
 from typing import Tuple, Optional
 
-log = logging.getLogger("roa.idrs15")
+log = logging.getLogger("roa.er296")
 
 LOGGER_FUNC = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)
 
@@ -39,38 +39,40 @@ class OcrEnvStruct(ctypes.Structure):
     ]
 
 
-class IDRS15Engine:
+class ER296Engine:
     """
-    Motor nativo iDRS15 para ROA OCR.
+    Motor nativo ER296 para ROA OCR.
     Maneja el ciclo de vida nativo (Creación -> Mock Logger -> Env setup -> OCR -> Destrucción).
     """
 
-    def __init__(self, idrs_dir: Optional[Path] = None):
-        if idrs_dir is None:
+    def __init__(self, er296_dir: Optional[Path] = None, idrs_dir: Optional[Path] = None):
+        target_dir = er296_dir or idrs_dir
+        if target_dir is None:
             base_dir = Path(__file__).parent.parent
-            idrs_dir = base_dir / "iDRS15"
-        self.idrs_dir = Path(idrs_dir).resolve()
+            target_dir = base_dir / "ER296"
+        self.er296_dir = Path(target_dir).resolve()
+        self.idrs_dir = self.er296_dir  # Alias de compatibilidad
         self.ocr_dll = None
         self._available = False
 
     def initialize(self) -> bool:
-        """Inicializa la DLL nativa iDRS15 y valida la disponibilidad del motor."""
-        dll_path = self.idrs_dir / "idrsocr15.dll"
+        """Inicializa la DLL nativa ER296 y valida la disponibilidad del motor."""
+        dll_path = self.er296_dir / "idrsocr15.dll"
         if not dll_path.exists():
-            log.warning(f"DLL iDRS15 no encontrada en {dll_path}")
+            log.warning(f"DLL de motor ER296 no encontrada en {dll_path}")
             return False
 
         try:
             if hasattr(os, "add_dll_directory"):
                 try:
-                    os.add_dll_directory(str(self.idrs_dir))
+                    os.add_dll_directory(str(self.er296_dir))
                 except Exception:
                     pass
 
-            os.environ["PATH"] = str(self.idrs_dir) + os.pathsep + os.environ.get("PATH", "")
+            os.environ["PATH"] = str(self.er296_dir) + os.pathsep + os.environ.get("PATH", "")
 
             for dep in ["idrskrn15.dll", "idrsprepro15.dll", "idrsdocout15.dll", "idrsasian15.dll", "idrsasian215.dll"]:
-                dep_path = self.idrs_dir / dep
+                dep_path = self.er296_dir / dep
                 if dep_path.exists():
                     try:
                         ctypes.CDLL(str(dep_path), mode=ctypes.RTLD_GLOBAL)
@@ -80,10 +82,10 @@ class IDRS15Engine:
             self.ocr_dll = ctypes.CDLL(str(dll_path), mode=ctypes.RTLD_GLOBAL)
             self._setup_prototypes()
             self._available = True
-            log.info(f"✅ Motor iDRS15 nativo cargado exitosamente desde {dll_path}")
+            log.info(f"✅ Motor ER296 nativo cargado exitosamente desde {dll_path}")
             return True
         except Exception as e:
-            log.error(f"❌ Error al cargar iDRS15: {e}")
+            log.error(f"❌ Error al cargar motor ER296: {e}")
             self._available = False
             return False
 
@@ -145,7 +147,7 @@ class IDRS15Engine:
         except Exception as e:
             log.debug(f"Logger patch note: {e}")
 
-        res_dir = self.idrs_dir / "OCRResources"
+        res_dir = self.er296_dir / "OCRResources"
         if res_dir.exists():
             path_bytes = str(res_dir).encode("ansi")
             path_buf = ctypes.create_string_buffer(path_bytes)
@@ -190,7 +192,7 @@ class IDRS15Engine:
             self.drsD_destroy_drs(handle)
 
     def process_image_file(self, src: Path, dst: Path, dpi: int = 300) -> Tuple[bool, str]:
-        """Procesa una imagen (.bmp, .png, .jpg, .tiff) directamente usando PIL e iDRS15."""
+        """Procesa una imagen (.bmp, .png, .jpg, .tiff) directamente usando PIL y ER296."""
         try:
             from PIL import Image
             img = Image.open(src)
@@ -200,18 +202,18 @@ class IDRS15Engine:
             pixel_data = img_gray.tobytes()
 
             success, zones = self.process_image_bytes(pixel_data, w, h, pitch)
-            log.info(f"iDRS15 OCR procesó imagen {src.name}: zones={zones}, status={success}")
+            log.info(f"ER296 OCR procesó imagen {src.name}: zones={zones}, status={success}")
 
             dst.parent.mkdir(parents=True, exist_ok=True)
             img.save(dst, "PDF", resolution=dpi)
             return True, ""
         except Exception as e:
-            log.error(f"Error iDRS15 procesando imagen {src.name}: {e}")
+            log.error(f"Error ER296 procesando imagen {src.name}: {e}")
             return False, str(e)
 
     def process_pdf(self, src: Path, dst: Path, lang: str = "spa+eng", dpi: int = 300) -> Tuple[bool, str]:
         if not self._available:
-            return False, "Motor iDRS15 no disponible"
+            return False, "Motor ER296 no disponible"
 
         if src.suffix.lower() in [".bmp", ".png", ".jpg", ".jpeg", ".tiff"]:
             return self.process_image_file(src, dst, dpi=dpi)
@@ -247,7 +249,7 @@ class IDRS15Engine:
                 pixel_data = img_gray.tobytes()
 
                 success, zones = self.process_image_bytes(pixel_data, w, h, pitch)
-                log.info(f"iDRS15 OCR Página {page_idx+1}: zones={zones}, status={success}")
+                log.info(f"ER296 OCR Página {page_idx+1}: zones={zones}, status={success}")
 
                 img_io = io.BytesIO()
                 img.save(img_io, format="PDF", resolution=dpi)
@@ -260,15 +262,24 @@ class IDRS15Engine:
 
             return True, ""
         except Exception as e:
-            log.error(f"Error en procesamiento iDRS15 de {src.name}: {e}")
+            log.error(f"Error en procesamiento ER296 de {src.name}: {e}")
             return False, str(e)
 
 
-def diagnose_idrs15(idrs_dir: Path) -> dict:
-    engine = IDRS15Engine(idrs_dir=idrs_dir)
+# Aliases para retrocompatibilidad total
+IDRS15Engine = ER296Engine
+
+
+def diagnose_er296(er296_dir: Path) -> dict:
+    engine = ER296Engine(er296_dir=er296_dir)
     ok = engine.initialize()
     return {
         "can_use_direct": ok,
         "engine_created": hex(engine.drsD_create_drs(0, 0)) if ok else "NULL",
         "dlls": {"idrsocr15.dll": {"loaded": ok}},
     }
+
+
+def diagnose_idrs15(idrs_dir: Path) -> dict:
+    return diagnose_er296(idrs_dir)
+

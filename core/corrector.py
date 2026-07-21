@@ -47,14 +47,18 @@ REGEX_RULES = [
     # ── Espacios y saltos ───────────────────────────────────────────────────
     # Múltiples espacios → uno solo
     (r' {2,}', ' ', 0),
-    # Líneas vacías múltiples → máximo 2
-    (r'\n{3,}', '\n\n', 0),
     # Espacios antes de puntuación
     (r' +([.,;:!?])', r'\1', 0),
     # Espacio faltante después de punto (si le sigue mayúscula)
     (r'\.([A-ZÁÉÍÓÚ])', r'. \1', 0),
-    # Guión de corte de línea (word wrap)
-    (r'(\w)-\n(\w)', r'\1\2', 0),
+    # ── Ruido OCR de sellos, marcas de agua y guiones de línea ─────────────
+    (r'(\w)-\n(\w)', r'\1\2', 0),                       # De-hyphenation (corte de palabra)
+    (r'([a-záéíóúüñ,;])\n([a-záéíóúüñ])', r'\1 \2', 0),    # Unwrapping: re-unir párrafos cortados a mitad de frase
+    (r'[=~_]{3,}', '', 0),                              # Filas de === o ~~~
+    (r'\b[b-df-hj-np-tv-z]{4,}\b', '', re.IGNORECASE),   # Palabras de solo consonantes (ruido OCR)
+    (r'^[^\w\s#\-*]{1,4}$', '', re.MULTILINE),          # Símbolos basura aislados al inicio de línea
+    (r' {2,}', ' ', 0),                                 # Espacios múltiples
+    (r'\n{3,}', '\n\n', 0),                             # Saltos vacíos excesivos
 
     # ── Errores tipográficos OCR en español ─────────────────────────────────
     # "cion" escrita como "ci6n"

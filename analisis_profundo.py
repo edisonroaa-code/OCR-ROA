@@ -60,10 +60,10 @@ def analyze(filename, label):
     except Exception as e:
         print(f"  Error: {e}")
 
-BASE = r"C:\Users\Usuario\Desktop\ROA OCR"
+BASE = os.path.dirname(os.path.abspath(__file__))
 
 # Analizar las DLLs clave
-analyze(os.path.join(BASE, "iDRS15", "idrsocr15.dll"), "idrsocr15.dll (OCR Engine)")
+analyze(os.path.join(BASE, "ER296", "idrsocr15.dll"), "idrsocr15.dll (OCR Engine)")
 analyze(os.path.join(BASE, "Soporte", "OCRLibraryInf.dll"), "OCRLibraryInf.dll (Bridge API)")
 
 print("\n\n")

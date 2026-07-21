@@ -53,7 +53,7 @@ class BatchConfig:
     run_correction: bool = True
     run_optimization: bool = True
     compress_quality: str = "printer"
-    ocr_engine: str = "auto"  # "idrs15_direct", "acrobat", "ocrmypdf", "tesseract", "auto"
+    ocr_engine: str = "auto"  # "er296", "ocrmypdf", "tesseract", "auto"
     
     # Control de lote
     checkpoint_interval: int = 10  # Guardar estado cada N archivos
@@ -264,7 +264,7 @@ class BatchProcessor:
                         if self._pipeline is None:
                             self._pipeline = PDFPipeline(
                                 config=pipeline_cfg,
-                                idrs_dir=settings.idrs_dir,
+                                er296_dir=settings.er296_dir,
                             )
                             self._pipeline.initialize()
                 
@@ -394,7 +394,7 @@ class BatchProcessor:
         log.info(f"📄 Archivos encontrados: {len(files)}")
         
         # Detectar motores disponibles
-        engines = detect_available_engines(settings.idrs_dir)
+        engines = detect_available_engines(settings.er296_dir)
         log.info(f"🔧 Motores disponibles: {engines}")
         
         if self.config.ocr_engine == "auto":
@@ -503,7 +503,7 @@ def run_batch(
         workers: Hilos paralelos (2 recomendado para iDRS15)
         lang: Idiomas OCR (ej: "spa+eng")
         dpi: Resolución para conversión a imagen
-        engine: "auto" | "idrs15_direct" | "acrobat" | "ocrmypdf" | "tesseract"
+        engine: "auto" | "er296" | "ocrmypdf" | "tesseract"
     
     Returns:
         BatchStats con resultados

@@ -13,9 +13,14 @@ BASE_DIR = Path(__file__).parent.resolve()
 class Settings(BaseSettings):
     # ── Rutas ─────────────────────────────────────────────────────────────
     base_dir: Path = BASE_DIR
-    idrs_dir: Path = BASE_DIR / "iDRS15"
+    er296_dir: Path = BASE_DIR / "ER296"
     soporte_dir: Path = BASE_DIR / "Soporte"
-    ocr_resources_dir: Path = BASE_DIR / "iDRS15" / "OCRResources"
+    ocr_resources_dir: Path = BASE_DIR / "ER296" / "OCRResources"
+
+    @property
+    def idrs_dir(self) -> Path:
+        """Alias para mantener compatibilidad con código existente."""
+        return self.er296_dir
 
     input_dir: Path = BASE_DIR / "PDFS_PENDIENTES"
     output_dir: Path = BASE_DIR / "PDFS_OCR"
@@ -24,8 +29,8 @@ class Settings(BaseSettings):
 
     # ── OCR ───────────────────────────────────────────────────────────────
     default_lang: str = Field(default="spa+eng", env="ROA_LANG")
-    # Motor preferido: "idrs15" | "ocrmypdf" | "tesseract" | "acrobat_pro" | "auto"
-    ocr_engine: str = Field(default="idrs15", env="ROA_ENGINE")
+    # Motor preferido: "er296" | "ocrmypdf" | "tesseract" | "auto"
+    ocr_engine: str = Field(default="er296", env="ROA_ENGINE")
     ocr_dpi: int = Field(default=300, env="ROA_DPI")
     ocr_threads: int = Field(default=2, env="ROA_THREADS")
     max_retries: int = Field(default=2, env="ROA_RETRIES")
