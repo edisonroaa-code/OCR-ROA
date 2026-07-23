@@ -5,7 +5,7 @@ internal static class Program
     private static void Main(string[] args)
     {
         Console.WriteLine("=================================================");
-        Console.WriteLine("   iDRS15 Native Engine Integration Demo (.NET)");
+        Console.WriteLine("   ER296 Native Engine Integration Demo (.NET)");
         Console.WriteLine("=================================================");
         Console.WriteLine($"Current directory: {Directory.GetCurrentDirectory()}");
 
@@ -42,7 +42,7 @@ internal static class Program
             }
 
             var renderPath = PrepareInputForOcr(inputPath);
-            Console.WriteLine($"[+] Sending input file to iDRS15 engine: {renderPath}");
+            Console.WriteLine($"[+] Sending input file to ER296 engine: {renderPath}");
             bool recoSuccess = wrapper.RecognizeImageFile(renderPath, out int zonesCount);
             Console.WriteLine($"[+] Recognition completed: Success={recoSuccess}, Zones Count={zonesCount}");
 

@@ -1,8 +1,8 @@
-# Arquitectura funcional de iDRS15
+# Arquitectura funcional de ER296
 
 ## 2. Arquitectura y funcionamiento
 
-iDRS15 es un motor OCR/ICR nativo de Windows, distribuido como bibliotecas DLL y recursos de idioma. No expone handlers HTTP ni endpoints REST en este workspace.
+ER296 es un motor OCR/ICR nativo de Windows, distribuido como bibliotecas DLL y recursos de idioma. No expone handlers HTTP ni endpoints REST en este workspace.
 
 ## Componentes principales
 

@@ -1,8 +1,8 @@
-# Guía de integración básica de iDRS15
+# Guía de integración básica de ER296
 
 ## 1. Capa de integración en C#
 
-Este repositorio ya no es solo un punto de partida: contiene una base de integración realista para usar iDRS15 desde .NET con carga de bibliotecas nativas, inicialización del motor y un flujo de entrada/salida preparado para OCR y Markdown.
+Este repositorio ya no es solo un punto de partida: contiene una base de integración realista para usar ER296 desde .NET con carga de bibliotecas nativas, inicialización del motor y un flujo de entrada/salida preparado para OCR y Markdown.
 
 ### Archivos principales
 - [integration-demo/integration-demo.csproj](integration-demo/integration-demo.csproj)

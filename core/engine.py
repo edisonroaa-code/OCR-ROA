@@ -42,7 +42,6 @@ def detect_available_engines(er296_dir: Optional[Path] = None, idrs_dir: Optiona
     er296_ok = er296.initialize()
     engines = {
         "er296": er296_ok,
-        "idrs15": er296_ok,  # Alias de compatibilidad
         "ocrmypdf": _check_ocrmypdf(),
         "tesseract": _check_tesseract(),
     }
@@ -180,7 +179,7 @@ class UnifiedOCREngine:
                  lang: str = "spa+eng", dpi: int = 300):
         # Mapeo de alias para mantener compatibilidad con peticiones existentes
         pref_clean = preferred.lower() if preferred else "er296"
-        if pref_clean in ("idrs15", "idrs15_direct", "er296_direct"):
+        if pref_clean in ("idrs15", "idrs15_direct", "idr15", "idr15_direct", "er296_direct"):
             pref_clean = "er296"
 
         self.preferred = pref_clean
@@ -189,7 +188,6 @@ class UnifiedOCREngine:
 
         target_dir = er296_dir or idrs_dir
         self._er296 = ER296Engine(er296_dir=target_dir)
-        self._idrs15 = self._er296  # Alias
         self._ocrmypdf = OcrmypdfEngine()
         self._tesseract = TesseractDirectEngine()
 
@@ -204,7 +202,6 @@ class UnifiedOCREngine:
 
         self._engines = {
             "er296": (er296_ok, self._er296),
-            "idrs15": (er296_ok, self._er296),  # Alias
             "ocrmypdf": (ocrmypdf_ok, self._ocrmypdf),
             "tesseract": (tesseract_ok, self._tesseract),
         }

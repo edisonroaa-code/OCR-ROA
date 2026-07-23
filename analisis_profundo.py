@@ -71,7 +71,7 @@ print("="*60)
 print("  CONCLUSION")
 print("="*60)
 print("""
-Las DLLs iDRS15 usan EXPORTS ORDINALES (sin nombres).
+Las DLLs ER296 usan EXPORTS ORDINALES (sin nombres).
 Esto significa que NO se pueden llamar directamente con
 ctypes porque no sabemos que funcion es cual.
 

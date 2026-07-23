@@ -2,7 +2,7 @@
 title Instalador ROA OCR - Registro COM y CLI global
 
 echo =================================================================
-echo   Instalador de ROA OCR CLI v2.0 y Servidor COM (iDRS15)
+echo   Instalador de ROA OCR CLI v2.0 y Servidor COM (ER296)
 echo =================================================================
 
 set WORKSPACE=%~dp0

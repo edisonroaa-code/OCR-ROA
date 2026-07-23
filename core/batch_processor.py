@@ -1,6 +1,6 @@
 """
 ROA OCR — Procesamiento por Lotes Masivo (Batch Processor)
-Optimizado para procesar miles de PDFs locales con iDRS15.
+Optimizado para procesar miles de PDFs locales con ER296.
 Características:
 - Procesamiento paralelo con ThreadPoolExecutor
 - Resumible (checkpoint cada N archivos)
@@ -43,8 +43,8 @@ class BatchConfig:
     error_log: Path = field(default_factory=lambda: settings.temp_dir / "batch_errors.json")
     
     # Paralelismo
-    max_workers: int = 2  # iDRS15 usa muchos recursos, 2 es óptimo
-    use_processes: bool = False  # Threads son mejor para iDRS15 (COM)
+    max_workers: int = 2  # ER296 usa muchos recursos, 2 es óptimo
+    use_processes: bool = False  # Threads son mejor para ER296 (COM)
     
     # Pipeline
     lang: str = "spa+eng"
@@ -118,7 +118,7 @@ class BatchStats:
 
 class BatchProcessor:
     """
-    Procesador masivo de PDFs con iDRS15.
+    Procesador masivo de PDFs con ER296.
     
     Uso básico:
         config = BatchConfig(
@@ -500,7 +500,7 @@ def run_batch(
     Args:
         input_dir: Directorio con PDFs de entrada
         output_dir: Directorio para PDFs con OCR
-        workers: Hilos paralelos (2 recomendado para iDRS15)
+        workers: Hilos paralelos (2 recomendado para ER296)
         lang: Idiomas OCR (ej: "spa+eng")
         dpi: Resolución para conversión a imagen
         engine: "auto" | "er296" | "ocrmypdf" | "tesseract"
@@ -541,7 +541,7 @@ if __name__ == "__main__":
     
     if len(sys.argv) < 3:
         print("Uso: python -m core.batch_processor <input_dir> <output_dir> [workers] [engine]")
-        print("Ejemplo: python -m core.batch_processor C:\\PDFS_IN C:\\PDFS_OUT 2 idrs15_direct")
+        print("Ejemplo: python -m core.batch_processor C:\\PDFS_IN C:\\PDFS_OUT 2 er296_direct")
         sys.exit(1)
     
     input_dir = sys.argv[1]

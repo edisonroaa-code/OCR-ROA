@@ -1,8 +1,8 @@
-# Guía de integración recomendada para iDRS15
+# Guía de integración recomendada para ER296
 
 ## Objetivo
 
-Esta guía resume los pasos recomendados para integrar el motor OCR de iDRS15 de forma realista, a partir del análisis del workspace actual.
+Esta guía resume los pasos recomendados para integrar el motor OCR de ER296 de forma realista, a partir del análisis del workspace actual.
 
 ## Estado del proyecto detectado
 
