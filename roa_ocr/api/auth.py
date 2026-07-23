@@ -3,7 +3,7 @@ ROA OCR — Middleware de autenticación por API Key
 """
 from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader
-from config import settings
+from roa_ocr.config import settings
 
 API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
 

@@ -8,7 +8,7 @@ services:
       - "8000:8000"
     environment:
       - ROA_ENGINE=auto
-      - ROA_LANG=spa+eng
+      - ROA_LANG=spa+eng+por
       - ROA_HOST=0.0.0.0
       - ROA_PORT=8000
       - ROA_API_KEYS=roa-dev-key-2024

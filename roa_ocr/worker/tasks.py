@@ -84,8 +84,8 @@ def _execute_job(job_id: str):
     options = job.get("options", {})
 
     try:
-        from core.pipeline import PDFPipeline, PipelineConfig
-        from config import settings
+        from roa_ocr.core.pipeline import PDFPipeline, PipelineConfig
+        from roa_ocr.config import settings
 
         config = PipelineConfig(
             lang=options.get("lang", "spa+eng"),
@@ -155,7 +155,7 @@ def _try_init_celery():
         return _celery_app
     try:
         from celery import Celery  # type: ignore[import-untyped]
-        from config import settings
+        from roa_ocr.config import settings
         app = Celery("roa_ocr", broker=settings.redis_url, backend=settings.redis_url)
         app.conf.update(
             task_serializer="json",

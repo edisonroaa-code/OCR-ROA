@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROA OCR — Document Intelligence</title>
+  <meta name="description" content="ROA OCR — Enterprise-grade local OCR engine and document pipeline for RAG & LLMs">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════
+       DESIGN SYSTEM — ROA OCR Professional Dashboard
+       Inspired by: Vercel, Linear, Raycast
+       Anti-pattern: generic AI-generated dark themes
+       ═══════════════════════════════════════════════════════════════════ */
+
+    :root {
+      /* Surface hierarchy */
+      --surface-0: #09090b;
+      --surface-1: #0c0c0f;
+      --surface-2: #131316;
+      --surface-3: #1a1a1f;
+      --surface-4: #222228;
+      --surface-elevated: #1c1c22;
+
+      /* Borders */
+      --border-subtle: rgba(255,255,255,0.06);
+      --border-default: rgba(255,255,255,0.09);
+      --border-strong: rgba(255,255,255,0.14);
+      --border-focus: rgba(200,160,100,0.5);
+
+      /* Text hierarchy */
+      --text-primary: #ededef;
+      --text-secondary: #a0a0a8;
+      --text-tertiary: #636369;
+      --text-inverse: #09090b;
+
+      /* Accent — warm amber/copper instead of generic blue */
+      --accent: #c8a064;
+      --accent-hover: #d4b07a;
+      --accent-muted: rgba(200,160,100,0.12);
+      --accent-border: rgba(200,160,100,0.25);
+
+      /* Status */
+      --status-ok: #3ecf8e;
+      --status-ok-bg: rgba(62,207,142,0.08);
+      --status-ok-border: rgba(62,207,142,0.2);
+      --status-warn: #f0b429;
+      --status-warn-bg: rgba(240,180,41,0.08);
+      --status-error: #ef4444;
+      --status-error-bg: rgba(239,68,68,0.08);
+      --status-idle: #636369;
+
+      /* Typography */
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+      /* Radii */
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.25);
+      --shadow-lg: 0 8px 30px rgba(0,0,0,0.35);
+      --shadow-glow: 0 0 40px rgba(200,160,100,0.06);
+    }
+
+    /* ── Reset ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--surface-0);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Scrollbar ─────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+    /* ── Header ────────────────────────────────────────────────────── */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 52px;
+      background: rgba(9,9,11,0.82);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent) 0%, #a07840 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-inverse);
+      letter-spacing: -0.5px;
+    }
+
+    .brand-name {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+
+    .header-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border-default);
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 2px;
+    }
+
+    .nav-tab {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+      background: none;
+      user-select: none;
+    }
+
+    .nav-tab:hover { color: var(--text-secondary); background: var(--surface-3); }
+    .nav-tab.active { color: var(--text-primary); background: var(--surface-4); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .engine-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .engine-indicator.online {
+      color: var(--status-ok);
+      background: var(--status-ok-bg);
+      border: 1px solid var(--status-ok-border);
+    }
+
+    .engine-indicator.offline {
+      color: var(--status-error);
+      background: var(--status-error-bg);
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+
+    .engine-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .version-badge {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-family: var(--font-mono);
+      font-weight: 400;
+    }
+
+    /* ── Layout ────────────────────────────────────────────────────── */
+    .app-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 0;
+      min-height: calc(100vh - 52px);
+    }
+
+    .main-content {
+      padding: 28px 32px;
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .sidebar {
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      max-height: calc(100vh - 52px);
+    }
+
+    /* ── Section Headers ───────────────────────────────────────────── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-tertiary);
+    }
+
+    .section-action {
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    .section-action:hover { color: var(--accent-hover); }
+
+    /* ── Metrics Bar ───────────────────────────────────────────────── */
+    .metrics-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .metric-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .metric-card:hover {
+      border-color: var(--border-default);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      margin-bottom: 6px;
+      letter-spacing: 0.2px;
+    }
+
+    .metric-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .metric-unit {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-tertiary);
+      margin-left: 2px;
+    }
+
+    .metric-delta {
+      font-size: 11px;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .metric-delta.positive { color: var(--status-ok); }
+    .metric-delta.neutral { color: var(--text-tertiary); }
+
+    /* ── Operation Selector ────────────────────────────────────────── */
+    .op-selector {
+      display: flex;
+      gap: 6px;
+      padding: 3px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .op-btn {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      user-select: none;
+    }
+
+    .op-btn:hover {
+      color: var(--text-secondary);
+      background: var(--surface-3);
+    }
+
+    .op-btn.active {
+      color: var(--text-primary);
+      background: var(--surface-4);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Dropzone ──────────────────────────────────────────────────── */
+    .upload-zone {
+      position: relative;
+      background: var(--surface-1);
+      border: 1.5px dashed var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      overflow: hidden;
+    }
+
+    .upload-zone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, var(--accent-muted) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--accent-border);
+      background: var(--surface-2);
+    }
+
+    .upload-zone:hover::before { opacity: 1; }
+
+    .upload-zone.dragover {
+      border-color: var(--accent);
+      background: var(--surface-2);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .upload-zone.dragover::before { opacity: 1; }
+
+    .upload-zone.has-file {
+      border-style: solid;
+      border-color: var(--border-strong);
+      padding: 20px 24px;
+    }
+
+    .upload-icon {
+      position: relative;
+      z-index: 1;
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 14px;
+      border-radius: var(--radius-md);
+      background: var(--surface-3);
+      border: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .upload-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--text-secondary);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .upload-title {
+      position: relative;
+      z-index: 1;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .upload-sub {
+      position: relative;
+      z-index: 1;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .upload-file-info {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .file-icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--accent-muted);
+      border: 1px solid var(--accent-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .file-icon-wrap svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 1.5;
+    }
+
+    .file-details {
+      flex: 1;
+      text-align: left;
+      min-width: 0;
+    }
+
+    .file-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 1px;
+    }
+
+    .file-remove {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default);
+      background: var(--surface-3);
+      color: var(--text-tertiary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .file-remove:hover {
+      border-color: rgba(239,68,68,0.3);
+      background: var(--status-error-bg);
+      color: var(--status-error);
+    }
+
+    /* ── Config Panel ──────────────────────────────────────────────── */
+    .config-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      user-select: none;
+      transition: color 0.15s;
+    }
+
+    .config-toggle:hover { color: var(--text-secondary); }
+
+    .config-toggle svg {
+      width: 14px;
+      height: 14px;
+      transition: transform 0.2s ease;
+    }
+
+    .config-toggle.open svg { transform: rotate(90deg); }
+
+    .config-panel {
+      display: none;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .config-panel.visible { display: grid; }
+
+    .cfg-field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+
+    .cfg-input {
+      width: 100%;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+      background: var(--surface-3);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .cfg-input:focus { border-color: var(--border-focus); }
+
+    /* ── Process Button ────────────────────────────────────────────── */
+    .process-btn {
+      width: 100%;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      color: var(--text-inverse);
+      background: linear-gradient(135deg, var(--accent) 0%, #b08a50 100%);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .process-btn:hover {
+      box-shadow: 0 4px 16px rgba(200,160,100,0.25);
+      transform: translateY(-1px);
+    }
+
+    .process-btn:active { transform: translateY(0); }
+
+    .process-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .process-btn.processing {
+      background: var(--surface-4);
+      color: var(--text-secondary);
+      cursor: wait;
+    }
+
+    /* ── Progress Bar ──────────────────────────────────────────────── */
+    .progress-wrap {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .progress-wrap.visible { display: flex; }
+
+    .progress-bar-track {
+      height: 3px;
+      background: var(--surface-4);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-hover) 100%);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-bar-fill.indeterminate {
+      width: 40%;
+      animation: indeterminate 1.5s ease-in-out infinite;
+    }
+
+    @keyframes indeterminate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(300%); }
+    }
+
+    .progress-status {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ── Result Panel ──────────────────────────────────────────────── */
+    .result-panel {
+      display: none;
+      flex-direction: column;
+      gap: 0;
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .result-panel.visible { display: flex; }
+
+    .result-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--surface-3);
+    }
+
+    .result-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .result-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .result-stats {
+      display: flex;
+      gap: 10px;
+    }
+
+    .result-stat {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-family: var(--font-mono);
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-btn {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      color: var(--text-secondary);
+      background: var(--surface-4);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+      background: var(--surface-elevated);
+    }
+
+    .action-btn.primary {
+      color: var(--text-inverse);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .action-btn.primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .result-body {
+      padding: 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .result-code {
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-break: break-word;
+      tab-size: 2;
+    }
+
+    /* ── Sidebar: System Health ─────────────────────────────────────── */
+    .health-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .health-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .health-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .health-rows {
+      padding: 4px 0;
+    }
+
+    .health-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      transition: background 0.1s;
+    }
+
+    .health-row:hover { background: var(--surface-3); }
+
+    .health-row-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .health-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .health-dot.ok { background: var(--status-ok); box-shadow: 0 0 6px rgba(62,207,142,0.3); }
+    .health-dot.warn { background: var(--status-warn); }
+    .health-dot.error { background: var(--status-error); }
+    .health-dot.idle { background: var(--status-idle); }
+
+    .health-engine-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .health-engine-status {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+    }
+
+    /* ── Sidebar: History ──────────────────────────────────────────── */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      transition: background 0.1s;
+      cursor: default;
+    }
+
+    .history-item:hover { background: var(--surface-3); }
+
+    .history-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .history-indicator.success { background: var(--status-ok); }
+    .history-indicator.error { background: var(--status-error); }
+
+    .history-content { flex: 1; min-width: 0; }
+
+    .history-filename {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .history-empty {
+      padding: 20px 12px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    /* ── Sidebar: Quick Info ────────────────────────────────────────── */
+    .info-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+
+    .info-key {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .info-val {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    /* ── Responsive ────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .app-layout {
+        grid-template-columns: 1fr;
+      }
+      .main-content { border-right: none; }
+      .sidebar {
+        max-height: none;
+        border-top: 1px solid var(--border-subtle);
+      }
+      .metrics-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .app-header { padding: 0 14px; }
+      .main-content { padding: 20px 16px; }
+      .sidebar { padding: 20px 16px; }
+      .metrics-bar { grid-template-columns: 1fr 1fr; }
+      .nav-tabs { display: none; }
+    }
+
+    /* ── Animations ────────────────────────────────────────────────── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in { animation: fadeIn 0.25s ease-out forwards; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-panel.visible { animation: slideUp 0.3s ease-out; }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 10px 16px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      color: var(--text-primary);
+      box-shadow: var(--shadow-lg);
+      z-index: 200;
+      animation: fadeIn 0.2s ease-out;
+      display: none;
+    }
+
+    .toast.visible { display: flex; align-items: center; gap: 8px; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════ HEADER ═══════════ -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand">
+        <div class="brand-icon">R</div>
+        <span class="brand-name">ROA OCR</span>
+      </div>
+      <div class="header-sep"></div>
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-view="process">Process</button>
+        <button class="nav-tab" data-view="api" onclick="window.open('/docs','_blank')">API Docs</button>
+      </nav>
+    </div>
+    <div class="header-right">
+      <div class="engine-indicator online" id="engine-status">
+        <div class="engine-dot"></div>
+        <span id="engine-label">Operational</span>
+      </div>
+      <span class="version-badge" id="version-badge">v2.2.0</span>
+    </div>
+  </header>
+
+  <!-- ═══════════ LAYOUT ═══════════ -->
+  <div class="app-layout">
+
+    <!-- ─── Main ─── -->
+    <main class="main-content">
+
+      <!-- Metrics -->
+      <section>
+        <div class="metrics-bar" id="metrics-bar">
+          <div class="metric-card">
+            <div class="metric-label">Processed</div>
+            <div class="metric-value" id="m-processed">0</div>
+            <div class="metric-delta neutral">this session</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Pages Total</div>
+            <div class="metric-value" id="m-pages">0</div>
+            <div class="metric-delta neutral">cumulative</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Avg. Time</div>
+            <div class="metric-value"><span id="m-avgtime">—</span><span class="metric-unit">s</span></div>
+            <div class="metric-delta neutral">per document</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Active Engine</div>
+            <div class="metric-value" id="m-engine" style="font-size:16px;">—</div>
+            <div class="metric-delta positive" id="m-engine-status">detecting...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Operation Selector -->
+      <section>
+        <div class="section-header">
+          <span class="section-title">Output format</span>
+        </div>
+        <div class="op-selector">
+          <button class="op-btn active" data-op="markdown">Markdown</button>
+          <button class="op-btn" data-op="chunks">RAG Chunks</button>
+          <button class="op-btn" data-op="pdf">Searchable PDF</button>
+          <button class="op-btn" data-op="compress">Compress</button>
+        </div>
+      </section>
+
+      <!-- Upload -->
+      <section>
+        <div class="section-header">
+          <span class="section-title">Document</span>
+        </div>
+        <div class="upload-zone" id="upload-zone">
+          <div class="upload-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div class="upload-title" id="upload-title">Drop a file or click to browse</div>
+          <div class="upload-sub" id="upload-sub">PDF, PNG, JPG, TIFF, BMP — up to 100 MB</div>
+        </div>
+        <input type="file" id="file-input" style="display:none;" accept=".pdf,.png,.jpg,.jpeg,.bmp,.tiff,.tif">
+      </section>
+
+      <!-- Config -->
+      <section>
+        <button class="config-toggle" id="config-toggle" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          Advanced configuration
+        </button>
+        <div class="config-panel" id="config-panel">
+          <div class="cfg-field">
+            <label>Engine</label>
+            <select class="cfg-input" id="cfg-engine">
+              <option value="auto">Automatic</option>
+              <option value="er296">ER296 Native</option>
+              <option value="ocrmypdf">OCRmyPDF</option>
+              <option value="tesseract">Tesseract</option>
+            </select>
+          </div>
+          <div class="cfg-field">
+            <label>Language</label>
+            <select class="cfg-input" id="cfg-lang">
+              <option value="spa+eng">Spanish + English</option>
+              <option value="spa">Spanish</option>
+              <option value="eng">English</option>
+              <option value="por">Portuguese</option>
+              <option value="fra">French</option>
+            </select>
+          </div>
+          <div class="cfg-field">
+            <label>Quality</label>
+            <select class="cfg-input" id="cfg-quality">
+              <option value="printer">High (300 DPI)</option>
+              <option value="ebook">Medium (150 DPI)</option>
+              <option value="screen">Low (72 DPI)</option>
+            </select>
+          </div>
+          <div class="cfg-field">
+            <label>Chunk Size</label>
+            <input type="number" class="cfg-input" id="cfg-chunk" value="500" min="100" max="2000">
+          </div>
+        </div>
+      </section>
+
+      <!-- Process Button -->
+      <button class="process-btn" id="process-btn" onclick="executeJob()">
+        Process Document
+      </button>
+
+      <!-- Progress -->
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-status">
+          <span id="progress-label">Initializing pipeline...</span>
+          <span id="progress-time"></span>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <section class="result-panel" id="result-panel">
+        <div class="result-toolbar">
+          <div class="result-info">
+            <span class="result-label">Output</span>
+            <div class="result-stats">
+              <span class="result-stat" id="r-time"></span>
+              <span class="result-stat" id="r-pages"></span>
+              <span class="result-stat" id="r-engine"></span>
+            </div>
+          </div>
+          <div class="result-actions">
+            <button class="action-btn" onclick="copyResult()">Copy</button>
+            <button class="action-btn primary" onclick="downloadResult()">Download</button>
+          </div>
+        </div>
+        <div class="result-body">
+          <pre class="result-code" id="result-code"></pre>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ─── Sidebar ─── -->
+    <aside class="sidebar">
+
+      <!-- System Health -->
+      <section>
+        <div class="section-header">
+          <span class="section-title">System Health</span>
+          <button class="section-action" onclick="refreshHealth()">Refresh</button>
+        </div>
+        <div class="health-card">
+          <div class="health-rows" id="health-rows">
+            <div class="health-row">
+              <div class="health-row-left">
+                <div class="health-dot idle" id="h-er296-dot"></div>
+                <span class="health-engine-name">ER296 Native</span>
+              </div>
+              <span class="health-engine-status" id="h-er296-status">checking...</span>
+            </div>
+            <div class="health-row">
+              <div class="health-row-left">
+                <div class="health-dot idle" id="h-ocrmypdf-dot"></div>
+                <span class="health-engine-name">OCRmyPDF</span>
+              </div>
+              <span class="health-engine-status" id="h-ocrmypdf-status">checking...</span>
+            </div>
+            <div class="health-row">
+              <div class="health-row-left">
+                <div class="health-dot idle" id="h-tesseract-dot"></div>
+                <span class="health-engine-name">Tesseract</span>
+              </div>
+              <span class="health-engine-status" id="h-tesseract-status">checking...</span>
+            </div>
+            <div class="health-row">
+              <div class="health-row-left">
+                <div class="health-dot idle" id="h-queue-dot"></div>
+                <span class="health-engine-name">Task Queue</span>
+              </div>
+              <span class="health-engine-status" id="h-queue-status">checking...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Info -->
+      <section>
+        <div class="section-header">
+          <span class="section-title">Instance</span>
+        </div>
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-key">Version</span>
+            <span class="info-val" id="i-version">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Uptime</span>
+            <span class="info-val" id="i-uptime">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">API Endpoint</span>
+            <span class="info-val">/api/v1</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Pipeline</span>
+            <span class="info-val">OCR → Fix → Opt</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- History -->
+      <section>
+        <div class="section-header">
+          <span class="section-title">Recent Activity</span>
+          <button class="section-action" onclick="clearHistory()">Clear</button>
+        </div>
+        <div class="history-list" id="history-list">
+          <div class="history-empty" id="history-empty">No documents processed yet</div>
+        </div>
+      </section>
+
+    </aside>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ═══════════ SCRIPTS ═══════════ -->
+  <script>
+    // ── State ──────────────────────────────────────────────────────
+    let selectedOp = 'markdown';
+    let selectedFile = null;
+    let lastOutput = '';
+    let sessionStats = { processed: 0, pages: 0, totalTime: 0 };
+    let history = [];
+
+    // ── Operation Selector ────────────────────────────────────────
+    document.querySelectorAll('.op-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.op-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedOp = btn.dataset.op;
+      });
+    });
+
+    // ── Config Toggle ─────────────────────────────────────────────
+    const configToggle = document.getElementById('config-toggle');
+    const configPanel = document.getElementById('config-panel');
+    configToggle.addEventListener('click', () => {
+      configToggle.classList.toggle('open');
+      configPanel.classList.toggle('visible');
+    });
+
+    // ── File Upload ───────────────────────────────────────────────
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('file-input');
+    const uploadTitle = document.getElementById('upload-title');
+    const uploadSub = document.getElementById('upload-sub');
+
+    uploadZone.addEventListener('click', (e) => {
+      if (e.target.closest('.file-remove')) return;
+      fileInput.click();
+    });
+
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) setFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) setFile(e.target.files[0]);
+    });
+
+    function setFile(file) {
+      selectedFile = file;
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      const ext = file.name.split('.').pop().toUpperCase();
+
+      uploadZone.classList.add('has-file');
+      uploadZone.innerHTML = `
+        <div class="upload-file-info">
+          <div class="file-icon-wrap">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="file-details">
+            <div class="file-name">${file.name}</div>
+            <div class="file-meta">${ext} · ${sizeMB} MB</div>
+          </div>
+          <button class="file-remove" onclick="clearFile(event)" title="Remove file">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      `;
+    }
+
+    function clearFile(e) {
+      e.stopPropagation();
+      selectedFile = null;
+      fileInput.value = '';
+      uploadZone.classList.remove('has-file');
+      uploadZone.innerHTML = `
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="upload-title">Drop a file or click to browse</div>
+        <div class="upload-sub">PDF, PNG, JPG, TIFF, BMP — up to 100 MB</div>
+      `;
+    }
+
+    // ── Process ───────────────────────────────────────────────────
+    async function executeJob() {
+      if (!selectedFile) {
+        showToast('Select a document first');
+        return;
+      }
+
+      const btn = document.getElementById('process-btn');
+      const progressWrap = document.getElementById('progress-wrap');
+      const progressFill = document.getElementById('progress-fill');
+      const progressLabel = document.getElementById('progress-label');
+      const progressTime = document.getElementById('progress-time');
+      const resultPanel = document.getElementById('result-panel');
+
+      // UI → processing state
+      btn.disabled = true;
+      btn.classList.add('processing');
+      btn.textContent = 'Processing...';
+      progressWrap.classList.add('visible');
+      progressFill.classList.add('indeterminate');
+      progressFill.style.width = '40%';
+      progressLabel.textContent = 'Sending to pipeline...';
+      resultPanel.classList.remove('visible');
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('engine', document.getElementById('cfg-engine').value);
+      formData.append('lang', document.getElementById('cfg-lang').value);
+      formData.append('chunk_size', document.getElementById('cfg-chunk').value);
+
+      let endpoint = '/api/v1/process/markdown';
+      if (selectedOp === 'chunks') endpoint = '/api/v1/process/chunks';
+
+      const startMs = Date.now();
+      const timer = setInterval(() => {
+        const elapsed = ((Date.now() - startMs) / 1000).toFixed(1);
+        progressTime.textContent = elapsed + 's';
+      }, 100);
+
+      try {
+        progressLabel.textContent = 'OCR engine running...';
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'X-API-Key': 'roa-dev-key-2024' },
+          body: formData
+        });
+
+        clearInterval(timer);
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`${response.status}: ${errText.substring(0, 200)}`);
+        }
+
+        const data = await response.json();
+        const elapsed = ((Date.now() - startMs) / 1000).toFixed(2);
+        const pages = data.pages || data.total_pages || 1;
+        const engine = data.engine_used || '—';
+
+        // Progress complete
+        progressFill.classList.remove('indeterminate');
+        progressFill.style.width = '100%';
+        progressLabel.textContent = 'Complete';
+
+        // Build output
+        if (selectedOp === 'markdown') {
+          lastOutput = data.full_markdown || 'No content extracted.';
+        } else if (selectedOp === 'chunks') {
+          lastOutput = JSON.stringify(data.chunks || [], null, 2);
+        } else {
+          lastOutput = JSON.stringify(data, null, 2);
+        }
+
+        // Show result
+        document.getElementById('r-time').textContent = elapsed + 's';
+        document.getElementById('r-pages').textContent = pages + ' pages';
+        document.getElementById('r-engine').textContent = engine;
+        document.getElementById('result-code').textContent = lastOutput;
+        resultPanel.classList.add('visible');
+
+        // Update session stats
+        sessionStats.processed++;
+        sessionStats.pages += pages;
+        sessionStats.totalTime += parseFloat(elapsed);
+        updateMetrics();
+
+        // Add to history
+        addHistory(selectedFile.name, true, elapsed, pages, engine);
+
+        showToast('Document processed successfully');
+
+      } catch (err) {
+        clearInterval(timer);
+        progressFill.classList.remove('indeterminate');
+        progressFill.style.width = '100%';
+        progressFill.style.background = 'var(--status-error)';
+        progressLabel.textContent = 'Failed';
+
+        lastOutput = `Error: ${err.message}`;
+        document.getElementById('result-code').textContent = lastOutput;
+        document.getElementById('r-time').textContent = '';
+        document.getElementById('r-pages').textContent = '';
+        document.getElementById('r-engine').textContent = '';
+        resultPanel.classList.add('visible');
+
+        addHistory(selectedFile?.name || 'unknown', false, '—', 0, '—');
+        showToast('Processing failed');
+
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('processing');
+        btn.textContent = 'Process Document';
+        setTimeout(() => {
+          progressWrap.classList.remove('visible');
+          progressFill.style.background = '';
+          progressFill.style.width = '0%';
+        }, 2000);
+      }
+    }
+
+    // ── Metrics ───────────────────────────────────────────────────
+    function updateMetrics() {
+      document.getElementById('m-processed').textContent = sessionStats.processed;
+      document.getElementById('m-pages').textContent = sessionStats.pages;
+      const avg = sessionStats.processed > 0
+        ? (sessionStats.totalTime / sessionStats.processed).toFixed(1)
+        : '—';
+      document.getElementById('m-avgtime').textContent = avg;
+    }
+
+    // ── History ───────────────────────────────────────────────────
+    function addHistory(filename, success, time, pages, engine) {
+      document.getElementById('history-empty').style.display = 'none';
+      const list = document.getElementById('history-list');
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const item = document.createElement('div');
+      item.className = 'history-item animate-in';
+      item.innerHTML = `
+        <div class="history-indicator ${success ? 'success' : 'error'}"></div>
+        <div class="history-content">
+          <div class="history-filename">${filename}</div>
+          <div class="history-meta">
+            <span>${timeStr}</span>
+            <span>${time}s</span>
+            <span>${pages} pgs</span>
+            <span>${engine}</span>
+          </div>
+        </div>
+      `;
+
+      list.insertBefore(item, list.children[1] || null);
+
+      // Keep max 20 items
+      while (list.children.length > 21) {
+        list.removeChild(list.lastChild);
+      }
+    }
+
+    function clearHistory() {
+      const list = document.getElementById('history-list');
+      list.innerHTML = '<div class="history-empty" id="history-empty">No documents processed yet</div>';
+    }
+
+    // ── Copy & Download ───────────────────────────────────────────
+    function copyResult() {
+      navigator.clipboard.writeText(lastOutput).then(() => {
+        showToast('Copied to clipboard');
+      });
+    }
+
+    function downloadResult() {
+      const ext = selectedOp === 'markdown' ? 'md' : 'json';
+      let baseName = 'document';
+      if (selectedFile && selectedFile.name) {
+        baseName = selectedFile.name.replace(/\.[^/.]+$/, '');
+      }
+      const outName = `${baseName}-roaOcr.${ext}`;
+      const blob = new Blob([lastOutput], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = outName;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast(`Downloading ${outName}`);
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 2800);
+    }
+
+    // ── Health Check ──────────────────────────────────────────────
+    async function refreshHealth() {
+      try {
+        const res = await fetch('/api/v1/health');
+        const data = await res.json();
+
+        // Engines
+        const engines = data.engines || {};
+        setHealthRow('er296', engines.er296);
+        setHealthRow('ocrmypdf', engines.ocrmypdf);
+        setHealthRow('tesseract', engines.tesseract);
+
+        // Queue
+        setHealthRow('queue', data.queue_available);
+
+        // Instance info
+        document.getElementById('i-version').textContent = data.version || '—';
+        document.getElementById('i-uptime').textContent = formatUptime(data.uptime_s || 0);
+        document.getElementById('version-badge').textContent = 'v' + (data.version || '2.2.0');
+
+        // Header status
+        const anyEngine = engines.er296 || engines.ocrmypdf || engines.tesseract;
+        const indicator = document.getElementById('engine-status');
+        const label = document.getElementById('engine-label');
+
+        if (anyEngine) {
+          indicator.className = 'engine-indicator online';
+          label.textContent = 'Operational';
+        } else {
+          indicator.className = 'engine-indicator offline';
+          label.textContent = 'No engines';
+        }
+
+        // Active engine in metrics
+        const activeEngine = engines.er296 ? 'ER296' : engines.ocrmypdf ? 'OCRmyPDF' : engines.tesseract ? 'Tesseract' : 'None';
+        document.getElementById('m-engine').textContent = activeEngine;
+        document.getElementById('m-engine-status').textContent = anyEngine ? 'ready' : 'unavailable';
+        document.getElementById('m-engine-status').className = 'metric-delta ' + (anyEngine ? 'positive' : 'neutral');
+
+      } catch (e) {
+        const indicator = document.getElementById('engine-status');
+        const label = document.getElementById('engine-label');
+        indicator.className = 'engine-indicator offline';
+        label.textContent = 'Offline';
+        document.getElementById('m-engine').textContent = 'Offline';
+        document.getElementById('m-engine-status').textContent = 'API unreachable';
+        document.getElementById('m-engine-status').className = 'metric-delta neutral';
+      }
+    }
+
+    function setHealthRow(id, available) {
+      const dot = document.getElementById(`h-${id}-dot`);
+      const status = document.getElementById(`h-${id}-status`);
+      if (available) {
+        dot.className = 'health-dot ok';
+        status.textContent = 'Available';
+        status.style.color = 'var(--status-ok)';
+      } else {
+        dot.className = 'health-dot error';
+        status.textContent = 'Unavailable';
+        status.style.color = 'var(--text-tertiary)';
+      }
+    }
+
+    function formatUptime(seconds) {
+      if (seconds < 60) return Math.round(seconds) + 's';
+      if (seconds < 3600) return Math.round(seconds / 60) + 'm';
+      const h = Math.floor(seconds / 3600);
+      const m = Math.round((seconds % 3600) / 60);
+      return h + 'h ' + m + 'm';
+    }
+
+    // ── Init ──────────────────────────────────────────────────────
+    refreshHealth();
+    setInterval(refreshHealth, 15000);
+  </script>
+</body>
+</html>

@@ -4,6 +4,64 @@ Todos los cambios notables y mejoras de este proyecto están documentados en est
 
 ---
 
+## [2.3.0] - 2026-07-23
+
+### 🚀 Nuevas Características
+
+- **MCP Server — Model Context Protocol ([`integrations/mcp_server.py`](integrations/mcp_server.py))**:
+  - Servidor MCP completo (JSON-RPC 2.0 sobre stdio) para integración directa con IAs (Claude, Gemini, GPT, Cursor).
+  - 4 tools expuestos: `ocr_to_markdown`, `ocr_to_chunks`, `ocr_enhance_pdf`, `ocr_engine_status`.
+  - Configuración lista en [`mcp.json`](mcp.json).
+
+- **Integración LangChain ([`integrations/langchain_loader.py`](integrations/langchain_loader.py))**:
+  - `ROAOCRLoader` — Document Loader drop-in compatible con LangChain.
+  - Modos `page` (un Document por página) y `single` (documento completo).
+  - Metadata incluye: source, page, char_count, engine_used.
+
+- **Integración LlamaIndex ([`integrations/llamaindex_reader.py`](integrations/llamaindex_reader.py))**:
+  - `ROAOCRReader` — Reader compatible con LlamaIndex.
+  - Soporte per-page y per-file con metadata extensible.
+
+- **Soporte Multi-Formato ([`core/format_converter.py`](core/format_converter.py))**:
+  - Conversión automática de DOCX, PPTX, XLSX, HTML, TXT, MD, CSV a PDF.
+  - Extracción de tablas desde documentos Office.
+  - Fallback PIL si reportlab no está disponible.
+
+- **Table Parser v2 ([`core/table_parser.py`](core/table_parser.py))**:
+  - Detección de tablas pipe-delimited (`| col | col |`).
+  - Soporte CSV-style con detección automática de columnas.
+  - Alineación inteligente de columnas con padding.
+  - Manejo de celdas vacías y fusionadas.
+  - Detección de filas separadoras Markdown existentes.
+
+- **Framework de Benchmarks ([`benchmarks/benchmark.py`](benchmarks/benchmark.py))**:
+  - Medición reproducible de CER (Character Error Rate) y WER (Word Error Rate).
+  - Comparación contra archivos ground-truth (.txt).
+  - Métricas de throughput (páginas/segundo).
+  - Reporte JSON exportable.
+
+- **CLI Moderna ([`roa_ocr.py`](roa_ocr.py))**:
+  - Subcomandos: `process`, `markdown`, `chunks`, `status`, `serve`, `mcp`, `benchmark`.
+  - Barra de progreso visual con porcentaje.
+  - Salida coloreada para terminal.
+  - Modo batch por defecto (retrocompatible).
+  - Help text con ejemplos de uso.
+
+- **Dashboard Profesional Rediseñado ([`dashboard/index.html`](dashboard/index.html))**:
+  - Diseño premium inspirado en Vercel/Linear/Raycast.
+  - Paleta warm amber, glassmorphism, tipografía Inter + JetBrains Mono.
+  - Métricas en vivo, dropzone animado, barra de progreso real.
+  - Panel de System Health con estado de 3 motores + cola.
+  - Historial de procesamiento con timeline.
+  - Responsive completo (desktop, tablet, mobile).
+  - Zero emojis en UI — estética profesional, no "típica de IA".
+
+- **Roadmap ([`ROADMAP.md`](ROADMAP.md))**:
+  - Documentación de posicionamiento competitivo vs MinerU, Docling, Marker, Surya 2, olmOCR 2, Zerox.
+  - Ventajas únicas, oportunidades perdidas, y plan de fases.
+
+---
+
 ## [2.2.0] - 2026-07-23
 
 ### 🚀 Nuevas Características

@@ -13,12 +13,12 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from api.routes.process import router as process_router
-from api.routes.batch import router as batch_router
-from api.routes.jobs import router as jobs_router
-from api.auth import require_api_key
-from api.models import HealthResponse, StatsResponse
-from config import settings
+from roa_ocr.api.routes.process import router as process_router
+from roa_ocr.api.routes.batch import router as batch_router
+from roa_ocr.api.routes.jobs import router as jobs_router
+from roa_ocr.api.auth import require_api_key
+from roa_ocr.api.models import HealthResponse, StatsResponse
+from roa_ocr.config import settings
 from worker.tasks import get_global_stats
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ async def lifespan(app: FastAPI):
     # Detectar motores en un thread separado (no bloquea el event loop)
     def _detect():
         try:
-            from core.engine import detect_available_engines
+            from roa_ocr.core.engine import detect_available_engines
             return detect_available_engines()
         except Exception as e:
             log.warning(f"No se pudieron detectar motores: {e}")

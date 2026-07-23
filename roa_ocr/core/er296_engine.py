@@ -57,6 +57,11 @@ class ER296Engine:
 
     def initialize(self) -> bool:
         """Inicializa la DLL nativa ER296 y valida la disponibilidad del motor."""
+        import sys
+        if sys.platform != "win32":
+            log.info("ℹ️ Entorno no-Windows detectado. Desactivando ER296 nativo. Activando capa de resiliencia multiplataforma.")
+            return False
+
         dll_path = self.er296_dir / "idrsocr15.dll"
         if not dll_path.exists():
             log.warning(f"DLL de motor ER296 no encontrada en {dll_path}")

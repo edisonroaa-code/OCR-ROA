@@ -16,9 +16,9 @@ if sys.platform == "win32":
 from pypdf import PdfReader, PdfWriter
 from PIL import Image
 
-from config import settings
-from core.er296_engine import ER296Engine
-from core.pipeline import PDFPipeline, PipelineConfig
+from roa_ocr.config import settings
+from roa_ocr.core.er296_engine import ER296Engine
+from roa_ocr.core.pipeline import PDFPipeline, PipelineConfig
 
 
 def evaluate_image_to_text_conversion():

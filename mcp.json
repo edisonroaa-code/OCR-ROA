@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "roa-ocr": {
+      "command": "python",
+      "args": ["integrations/mcp_server.py"],
+      "env": {}
+    }
+  }
+}

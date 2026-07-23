@@ -10,10 +10,10 @@ from typing import List
 
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, BackgroundTasks
 
-from api.auth import require_api_key
-from api.models import BatchRequest, BatchResponse, ProcessOptions
+from roa_ocr.api.auth import require_api_key
+from roa_ocr.api.models import BatchRequest, BatchResponse, ProcessOptions
 from worker.tasks import submit_process_job, get_job_store
-from config import settings
+from roa_ocr.config import settings
 
 log = logging.getLogger("roa.routes.batch")
 router = APIRouter(prefix="/api/v1/batch", tags=["batch"])

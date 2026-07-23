@@ -10,11 +10,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from core.engine import UnifiedOCREngine
-from core.corrector import PostOCRCorrector
-from core.optimizer import PDFOptimizer
-from core.table_parser import TableParser
-from core.rag_chunker import RAGChunker
+from roa_ocr.core.engine import UnifiedOCREngine
+from roa_ocr.core.corrector import PostOCRCorrector
+from roa_ocr.core.optimizer import PDFOptimizer
+from roa_ocr.core.table_parser import TableParser
+from roa_ocr.core.rag_chunker import RAGChunker
 
 log = logging.getLogger("roa.pipeline")
 
@@ -22,7 +22,7 @@ log = logging.getLogger("roa.pipeline")
 @dataclass
 class PipelineConfig:
     """Configuración del pipeline."""
-    lang: str = "spa+eng"
+    lang: str = "spa+eng+por"
     dpi: int = 300
     skip_if_has_text: bool = True
     fix_orientation: bool = True
@@ -31,6 +31,7 @@ class PipelineConfig:
     compress_quality: str = "printer"  # screen | ebook | printer | prepress
     ocr_engine: str = "auto"
     metadata: dict = field(default_factory=dict)
+    custom_rules: Optional[dict] = None
 
 
 @dataclass
@@ -98,7 +99,7 @@ class PDFPipeline:
         )
 
         # Corrector post-OCR
-        self.corrector = corrector or PostOCRCorrector()
+        self.corrector = corrector or PostOCRCorrector(custom_rules=self.config.custom_rules)
 
         # Optimizador
         self.optimizer = optimizer or PDFOptimizer(

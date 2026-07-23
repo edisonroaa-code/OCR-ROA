@@ -11,10 +11,10 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
 
-from api.auth import require_api_key
-from api.models import ProcessOptions, OCREngine, CompressQuality
+from roa_ocr.api.auth import require_api_key
+from roa_ocr.api.models import ProcessOptions, OCREngine, CompressQuality
 from worker.tasks import submit_process_job
-from config import settings
+from roa_ocr.config import settings
 
 log = logging.getLogger("roa.routes.process")
 router = APIRouter(prefix="/api/v1", tags=["process"])
@@ -176,7 +176,7 @@ async def process_markdown_endpoint(
 
     try:
         import asyncio
-        from core.pipeline import PDFPipeline, PipelineConfig
+        from roa_ocr.core.pipeline import PDFPipeline, PipelineConfig
 
         loop = asyncio.get_event_loop()
 
@@ -217,7 +217,7 @@ async def process_chunks_endpoint(
 
     try:
         import asyncio
-        from core.pipeline import PDFPipeline, PipelineConfig
+        from roa_ocr.core.pipeline import PDFPipeline, PipelineConfig
 
         loop = asyncio.get_event_loop()
 
@@ -238,7 +238,7 @@ async def process_chunks_endpoint(
 async def _run_pipeline(src: Path, dst: Path, options: ProcessOptions) -> dict:
     """Ejecuta el pipeline de forma asíncrona (en thread pool)."""
     import asyncio
-    from core.pipeline import PDFPipeline, PipelineConfig
+    from roa_ocr.core.pipeline import PDFPipeline, PipelineConfig
 
     loop = asyncio.get_event_loop()
 

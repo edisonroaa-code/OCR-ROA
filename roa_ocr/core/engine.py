@@ -16,7 +16,7 @@ import subprocess
 from pathlib import Path
 from typing import Tuple, Optional
 
-from core.er296_engine import ER296Engine, IDRS15Engine
+from roa_ocr.core.er296_engine import ER296Engine, IDRS15Engine
 
 log = logging.getLogger("roa.engine")
 
@@ -35,6 +35,15 @@ def _check_tesseract() -> bool:
     return shutil.which("tesseract") is not None
 
 
+def _check_easyocr() -> bool:
+    """Verifica si easyocr está instalado."""
+    try:
+        import easyocr  # type: ignore
+        return True
+    except ImportError:
+        return False
+
+
 def detect_available_engines(er296_dir: Optional[Path] = None, idrs_dir: Optional[Path] = None) -> dict:
     """Detecta qué motores OCR están disponibles en el sistema."""
     target_dir = er296_dir or idrs_dir
@@ -44,6 +53,7 @@ def detect_available_engines(er296_dir: Optional[Path] = None, idrs_dir: Optiona
         "er296": er296_ok,
         "ocrmypdf": _check_ocrmypdf(),
         "tesseract": _check_tesseract(),
+        "easyocr": _check_easyocr(),
     }
     log.info(f"Motores OCR detectados: {engines}")
     return engines
@@ -67,7 +77,7 @@ class OcrmypdfEngine:
             log.warning("Motor ocrmypdf no encontrado")
         return self._available
 
-    def process_pdf(self, src: Path, dst: Path, lang: str = "spa+eng",
+    def process_pdf(self, src: Path, dst: Path, lang: str = "spa+eng+por",
                     dpi: int = 300, skip_text: bool = True) -> Tuple[bool, str]:
         dst.parent.mkdir(parents=True, exist_ok=True)
         ocr_lang = lang.replace(" ", "+")
@@ -127,7 +137,7 @@ class TesseractDirectEngine:
             log.warning("Tesseract no encontrado en PATH")
         return self._available
 
-    def process_pdf(self, src: Path, dst: Path, lang: str = "spa+eng",
+    def process_pdf(self, src: Path, dst: Path, lang: str = "spa+eng+por",
                     dpi: int = 300) -> Tuple[bool, str]:
         if not self._available:
             return False, "Tesseract no disponible"
@@ -164,6 +174,42 @@ class TesseractDirectEngine:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Motor 4: EasyOCR (Fallback Python Puro sin dependencias de sistema)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class EasyOCREngine:
+    """Motor OCR fallback usando EasyOCR (Python puro)."""
+
+    def __init__(self):
+        self._available = False
+
+    def initialize(self) -> bool:
+        self._available = _check_easyocr()
+        if self._available:
+            log.info("✅ Motor EasyOCR (Python puro) disponible")
+        return self._available
+
+    def process_pdf(self, src: Path, dst: Path, lang: str = "spa+eng+por",
+                    dpi: int = 300) -> Tuple[bool, str]:
+        if not self._available:
+            return False, "EasyOCR no disponible"
+
+        try:
+            from roa_ocr import _easyocr_extract
+            from roa_ocr.core.format_converter import _text_to_pdf
+
+            text, pages = _easyocr_extract(src, lang, dpi)
+            if text:
+                return _text_to_pdf(text, dst, title=src.stem)
+            else:
+                return False, "EasyOCR extrajo texto vacío"
+
+        except Exception as e:
+            log.error(f"❌ Error EasyOCR en {src.name}: {e}")
+            return False, str(e)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Motor Unificado — Orquesta la cascada (Prioridad #1: ER296)
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -176,7 +222,7 @@ class UnifiedOCREngine:
     def __init__(self, preferred: str = "er296",
                  er296_dir: Optional[Path] = None,
                  idrs_dir: Optional[Path] = None,
-                 lang: str = "spa+eng", dpi: int = 300):
+                 lang: str = "spa+eng+por", dpi: int = 300):
         # Mapeo de alias para mantener compatibilidad con peticiones existentes
         pref_clean = preferred.lower() if preferred else "er296"
         if pref_clean in ("idrs15", "idrs15_direct", "idr15", "idr15_direct", "er296_direct"):
@@ -199,15 +245,21 @@ class UnifiedOCREngine:
         er296_ok = self._er296.initialize()
         ocrmypdf_ok = self._ocrmypdf.initialize()
         tesseract_ok = self._tesseract.initialize()
+        easyocr_ok = _check_easyocr()
+
+        self._easyocr = EasyOCREngine() if easyocr_ok else None
+        if easyocr_ok:
+            self._easyocr.initialize()
 
         self._engines = {
             "er296": (er296_ok, self._er296),
             "ocrmypdf": (ocrmypdf_ok, self._ocrmypdf),
             "tesseract": (tesseract_ok, self._tesseract),
+            "easyocr": (easyocr_ok, self._easyocr),
         }
 
         # Determinar orden según preferencia (Default: er296)
-        priority = ["er296", "ocrmypdf", "tesseract"]
+        priority = ["er296", "ocrmypdf", "tesseract", "easyocr"]
         if self.preferred in self._engines and self.preferred != "auto":
             priority = [self.preferred] + [e for e in priority if e != self.preferred]
 
@@ -218,9 +270,8 @@ class UnifiedOCREngine:
                 log.info(f"🚀 Motor principal activo: {name.upper()}")
                 return name
 
-        raise RuntimeError(
-            "❌ No hay motores OCR disponibles. Verifica la carpeta ER296 o instala ocrmypdf/tesseract."
-        )
+        log.warning("❌ No se detectó ER296, ocrmypdf, tesseract ni easyocr. Funcionalidad OCR limitada a extracción pypdf.")
+        return "none"
 
     def process(self, src: Path, dst: Path,
                 lang: Optional[str] = None,
@@ -232,7 +283,7 @@ class UnifiedOCREngine:
             (éxito, mensaje_error, motor_usado)
         """
         use_lang = lang or self.lang
-        cascade = ["er296", "ocrmypdf", "tesseract"]
+        cascade = ["er296", "ocrmypdf", "tesseract", "easyocr"]
 
         if self._active_engine:
             cascade = [self._active_engine] + [e for e in cascade if e != self._active_engine]
@@ -251,6 +302,10 @@ class UnifiedOCREngine:
                         src, dst, lang=use_lang, dpi=self.dpi, skip_text=skip_text
                     )
                 elif name == "tesseract":
+                    success, err = instance.process_pdf(
+                        src, dst, lang=use_lang, dpi=self.dpi
+                    )
+                elif name == "easyocr":
                     success, err = instance.process_pdf(
                         src, dst, lang=use_lang, dpi=self.dpi
                     )

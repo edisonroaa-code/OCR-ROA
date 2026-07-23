@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ghostscript \
     tesseract-ocr \
     tesseract-ocr-spa \
+    tesseract-ocr-por \
     tesseract-ocr-eng \
     poppler-utils \
     libgl1 \
@@ -15,15 +16,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copiar configuración de dependencias
-COPY pyproject.toml requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
 # Copiar el código del proyecto
 COPY . .
+
+# Instalar el paquete y dependencias completas
+RUN pip install --no-cache-dir ".[full]"
 
 # Exponer el puerto de la API FastAPI
 EXPOSE 8000
 
 # Comando de inicio del servidor FastAPI
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "roa_ocr.api.main", "--host", "0.0.0.0", "--port", "8000"]

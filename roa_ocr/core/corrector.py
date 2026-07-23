@@ -23,6 +23,11 @@ LITERAL_FIXES = {
     "í": "í",
     "ó": "ó",
     "ú": "ú",
+    "ã": "ã",
+    "õ": "õ",
+    "ç": "ç",
+    "â": "â",
+    "ê": "ê",
     # Caracteres especiales
     "—": "—",
     "–": "-",
@@ -174,6 +179,44 @@ DOMAIN_FIXES_ES = {
     "validacion": "validación",
 }
 
+# ── Correcciones de Dominio: Portugués (Legal/Administrativo) ────────────
+DOMAIN_FIXES_PT = {
+    # Errores comunes de OCR
+    "nâo": "não",
+    "nao": "não",
+    "sâo": "são",
+    "açâo": "ação",
+    "n.o": "n.º",
+    "n°": "n.º",
+    "art.o": "Art.º",
+    "Cpf": "CPF",
+    "Cnpj": "CNPJ",
+    # Terminología frecuente legal/empresarial que falla
+    "declaracao": "declaração",
+    "disposicao": "disposição",
+    "direcao": "direção",
+    "fundacao": "fundação",
+    "identificacao": "identificação",
+    "inscricao": "inscrição",
+    "investigacao": "investigação",
+    "jurisdicao": "jurisdição",
+    "legislacao": "legislação",
+    "notificacao": "notificação",
+    "obrigacao": "obrigação",
+    "organizacao": "organização",
+    "participacao": "participação",
+    "prestacao": "prestação",
+    "producao": "produção",
+    "protecao": "proteção",
+    "resolucao": "resolução",
+    "sancao": "sanção",
+    "selecao": "seleção",
+    "subordinacao": "subordinação",
+    "transicao": "transição",
+    "utilizacao": "utilização",
+    "validacao": "validação",
+}
+
 
 class PostOCRCorrector:
     """
@@ -181,9 +224,12 @@ class PostOCRCorrector:
     Aplica reglas en capas: literales → regex → dominio → personalizadas.
     """
 
-    def __init__(self, custom_fixes_path: Optional[Path] = None):
+    def __init__(self, custom_fixes_path: Optional[Path] = None, custom_rules: Optional[dict] = None):
         self.custom_fixes: dict = {}
         self._load_custom(custom_fixes_path)
+        if custom_rules:
+            self.custom_fixes.update(custom_rules)
+            log.info(f"Cargadas {len(custom_rules)} correcciones dinámicas")
 
     def _load_custom(self, path: Optional[Path]):
         if path and path.exists():
@@ -234,6 +280,11 @@ class PostOCRCorrector:
         # Capa 3: Correcciones de dominio (español)
         if "spa" in lang or "es" in lang:
             for wrong, correct in DOMAIN_FIXES_ES.items():
+                text = re.sub(r'\b' + re.escape(wrong) + r'\b', correct, text, flags=re.IGNORECASE)
+
+        # Capa 3b: Correcciones de dominio (portugués)
+        if "por" in lang or "pt" in lang:
+            for wrong, correct in DOMAIN_FIXES_PT.items():
                 text = re.sub(r'\b' + re.escape(wrong) + r'\b', correct, text, flags=re.IGNORECASE)
 
         # Capa 4: Correcciones personalizadas (aprendidas)

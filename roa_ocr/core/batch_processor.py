@@ -22,9 +22,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue
 import hashlib
 
-from core.engine import UnifiedOCREngine, detect_available_engines
-from core.pipeline import PDFPipeline, PipelineConfig, PipelineResult
-from config import settings
+from roa_ocr.core.engine import UnifiedOCREngine, detect_available_engines
+from roa_ocr.core.pipeline import PDFPipeline, PipelineConfig, PipelineResult
+from roa_ocr.config import settings
 
 log = logging.getLogger("roa.batch")
 

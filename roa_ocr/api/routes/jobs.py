@@ -11,9 +11,9 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 
-from api.auth import require_api_key
+from roa_ocr.api.auth import require_api_key
 from worker.tasks import get_job_store, cancel_job
-from config import settings
+from roa_ocr.config import settings
 
 log = logging.getLogger("roa.routes.jobs")
 router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])

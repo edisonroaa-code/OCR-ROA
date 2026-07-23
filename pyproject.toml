@@ -4,33 +4,108 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roa-ocr"
-version = "2.1.0"
+version = "2.3.0"
 authors = [
-  { name="ROA OCR Team", email="soporte@roa.ai" },
+  { name = "Edison Roa", email = "soporte@roa.ai" },
 ]
-description = "Ultra-Fast Native OCR Engine & PDF Enhancement Pipeline for LLMs & RAG"
+description = "The Ultimate OCR engine for Latam and Iberian (Spanish & Portuguese) legal documents. 250+ lexical rules, RAG-ready, cross-platform with Windows acceleration."
 readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Image Recognition",
     "Topic :: Text Processing :: Indexing",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Legal Industry",
 ]
+keywords = [
+    "ocr", "pdf", "document", "rag", "llm", "markdown",
+    "spanish", "portuguese", "legal", "correction", "pipeline",
+    "mcp", "langchain", "llamaindex",
+]
+
+# Minimal dependencies — the core works with just these
 dependencies = [
+    "Pillow>=10.0.0",
+    "pypdf>=4.0.0",
+]
+
+[project.optional-dependencies]
+# Full pipeline (API server + all engines)
+full = [
     "fastapi>=0.111.0",
-    "uvicorn>=0.30.1",
-    "pydantic>=2.7.4",
-    "pydantic-settings>=2.3.3",
-    "Pillow>=10.3.0",
-    "pdf2image>=1.17.0",
-    "pypdf>=4.2.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-multipart>=0.0.9",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
     "pytesseract>=0.3.10",
+    "ocrmypdf>=16.0.0",
+    "pdf2image>=1.17.0",
+    "aiofiles>=23.0.0",
+    "psutil>=5.9.0",
+]
+
+# EasyOCR fallback (pure Python, no system deps)
+easyocr = [
+    "easyocr>=1.7.0",
+]
+
+# LangChain integration
+langchain = [
+    "langchain-core>=0.2.0",
+]
+
+# LlamaIndex integration
+llamaindex = [
+    "llama-index-core>=0.10.0",
+]
+
+# MCP server
+mcp = [
+    "mcp>=1.0.0",
+]
+
+# Multi-format support (DOCX, PPTX, XLSX)
+formats = [
+    "python-docx>=1.0.0",
+    "python-pptx>=0.6.0",
+    "openpyxl>=3.1.0",
+]
+
+# Development
+dev = [
+    "httpx>=0.27.0",
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+]
+
+# Everything
+all = [
+    "roa-ocr[full,easyocr,langchain,llamaindex,formats,dev]",
 ]
 
 [project.scripts]
-roa-ocr = "roa_ocr:main"
+roa-ocr = "roa_ocr.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/edisonroaa-code/OCR-ROA"
+Repository = "https://github.com/edisonroaa-code/OCR-ROA"
+Issues = "https://github.com/edisonroaa-code/OCR-ROA/issues"
+Documentation = "https://github.com/edisonroaa-code/OCR-ROA#readme"
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["roa_ocr*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.html", "*.json"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
