@@ -30,6 +30,7 @@ class PipelineConfig:
     run_optimization: bool = True
     compress_quality: str = "printer"  # screen | ebook | printer | prepress
     ocr_engine: str = "auto"
+    llm_mode: bool = False
     metadata: dict = field(default_factory=dict)
     custom_rules: Optional[dict] = None
 
@@ -242,7 +243,7 @@ class PDFPipeline:
             for page in reader.pages:
                 text = page.extract_text() or ""
                 if text:
-                    corrected = self.corrector.correct_text(text, lang=lang)
+                    corrected = self.corrector.correct_text(text, lang=lang, llm_mode=self.config.llm_mode, engine=self.config.ocr_engine)
                     stats = self.corrector.statistics(text, corrected)
                     total_changes += stats.get("estimated_changes", 0)
             return total_changes
@@ -320,7 +321,7 @@ class PDFPipeline:
                                 log.warning(f"Extracción directa OCR pág {idx} falló: {ex}")
 
                     if self.config.run_correction:
-                        raw_txt = self.corrector.correct_text(raw_txt, lang=self.config.lang)
+                        raw_txt = self.corrector.correct_text(raw_txt, lang=self.config.lang, llm_mode=self.config.llm_mode, engine=res.engine_used)
                     
                     table_formatted_txt = self.table_parser.parse_text_to_tables(raw_txt)
                     page_header = f"## Página {idx}\n\n"

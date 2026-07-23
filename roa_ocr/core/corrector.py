@@ -248,7 +248,7 @@ class PostOCRCorrector:
         """Añade una corrección personalizada (feedback loop)."""
         self.custom_fixes[wrong] = correct
 
-    def correct_text(self, text: str, lang: str = "spa") -> str:
+    def correct_text(self, text: str, lang: str = "spa", llm_mode: bool = False, engine: str = "er296") -> str:
         """
         Aplica todas las capas de corrección al texto.
         
@@ -266,6 +266,12 @@ class PostOCRCorrector:
         for wrong, correct in LITERAL_FIXES.items():
             if wrong in text:
                 text = text.replace(wrong, correct)
+
+        # Capa Contextual (LLM Mode / Fallback Engine)
+        if llm_mode or engine != "er296":
+            # Inyectar etiquetas semánticas en el ruido (sellos, firmas, marcas)
+            text = re.sub(r'([_~.]){4,}', r'[LÍNEA DE FIRMA / SELLO]', text)
+            text = re.sub(r'\b[b-df-hj-np-tv-z]{5,}\b', r'[MANUSCRITO ILEGIBLE]', text, flags=re.IGNORECASE)
 
         # Capa 2: Reglas regex
         for pattern, replacement, flags in REGEX_RULES:

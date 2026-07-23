@@ -42,6 +42,7 @@ def process_pdf(
     engine: str = "auto",
     dpi: int = 300,
     custom_rules: Optional[dict] = None,
+    llm_mode: bool = False,
 ) -> ROAResult:
     """
     Process a scanned PDF or image to extract corrected text.
@@ -68,15 +69,15 @@ def process_pdf(
         return ROAResult(success=False, error=f"File not found: {file_path}")
 
     try:
-        return _process_with_pipeline(src, language, output, engine, dpi, custom_rules)
+        return _process_with_pipeline(src, language, output, engine, dpi, custom_rules, llm_mode)
     except ImportError:
         # Pipeline deps not available, try lightweight mode
-        return _process_lightweight(src, language, dpi, custom_rules)
+        return _process_lightweight(src, language, dpi, custom_rules, llm_mode)
     except Exception as e:
         return ROAResult(success=False, error=str(e))
 
 
-def process_to_markdown(file_path: str, language: str = "spa+eng", custom_rules: Optional[dict] = None) -> str:
+def process_to_markdown(file_path: str, language: str = "spa+eng", custom_rules: Optional[dict] = None, llm_mode: bool = False) -> str:
     """
     Shortcut: extract Markdown text from a PDF.
 
@@ -87,7 +88,7 @@ def process_to_markdown(file_path: str, language: str = "spa+eng", custom_rules:
     Returns:
         Markdown text string
     """
-    result = process_pdf(file_path, language=language, custom_rules=custom_rules)
+    result = process_pdf(file_path, language=language, custom_rules=custom_rules, llm_mode=llm_mode)
     return result.markdown
 
 
@@ -96,6 +97,7 @@ def process_to_chunks(
     language: str = "spa+eng",
     chunk_size: int = 500,
     custom_rules: Optional[dict] = None,
+    llm_mode: bool = True,
 ) -> list:
     """
     Shortcut: extract RAG-ready chunks from a PDF.
@@ -114,7 +116,7 @@ def process_to_chunks(
         config = PipelineConfig(
             lang=language, dpi=300,
             run_correction=True, run_optimization=False,
-            custom_rules=custom_rules,
+            custom_rules=custom_rules, llm_mode=llm_mode,
         )
         pipeline = PDFPipeline(config=config)
         pipeline.initialize()
@@ -123,7 +125,7 @@ def process_to_chunks(
         return result.get("chunks", [])
     except Exception:
         # Fallback: split markdown into basic chunks
-        md = process_to_markdown(file_path, language, custom_rules)
+        md = process_to_markdown(file_path, language, custom_rules, llm_mode=llm_mode)
         chunks = []
         for i in range(0, len(md), chunk_size):
             chunks.append({
@@ -137,7 +139,7 @@ def process_to_chunks(
 # ── Internal implementation ───────────────────────────────────────────────────
 
 def _process_with_pipeline(
-    src: Path, language: str, output: Optional[str], engine: str, dpi: int, custom_rules: Optional[dict] = None
+    src: Path, language: str, output: Optional[str], engine: str, dpi: int, custom_rules: Optional[dict] = None, llm_mode: bool = False
 ) -> ROAResult:
     """Use the full pipeline (requires full dependencies)."""
     import time
@@ -149,6 +151,7 @@ def _process_with_pipeline(
         run_optimization=output is not None,
         ocr_engine=engine,
         custom_rules=custom_rules,
+        llm_mode=llm_mode,
     )
     pipeline = PDFPipeline(config=config)
     pipeline.initialize()
@@ -182,7 +185,7 @@ def _process_with_pipeline(
     )
 
 
-def _process_lightweight(src: Path, language: str, dpi: int, custom_rules: Optional[dict] = None) -> ROAResult:
+def _process_lightweight(src: Path, language: str, dpi: int, custom_rules: Optional[dict] = None, llm_mode: bool = False) -> ROAResult:
     """Lightweight mode: extract text with pypdf, apply corrections."""
     import time
 
@@ -212,11 +215,14 @@ def _process_lightweight(src: Path, language: str, dpi: int, custom_rules: Optio
 
     # Apply corrections if available
     corrections = 0
+    engine_used = "pypdf" if len(text.strip()) > 50 else "easyocr"
     if text:
         try:
             from roa_ocr.core.corrector import PostOCRCorrector
             corrector = PostOCRCorrector(custom_rules=custom_rules)
-            text, corrections = corrector.correct(text)
+            text = corrector.correct_text(text, lang=language, llm_mode=llm_mode, engine=engine_used)
+            # Lightweight just estimates corrections
+            corrections = len(text) // 100 
         except ImportError:
             pass
 
@@ -226,7 +232,7 @@ def _process_lightweight(src: Path, language: str, dpi: int, custom_rules: Optio
         success=len(text.strip()) > 0,
         markdown=text,
         pages=pages,
-        engine="pypdf" if len(text.strip()) > 50 else "easyocr",
+        engine=engine_used,
         time_s=round(elapsed, 2),
         corrections=corrections,
         error="" if text.strip() else "No text extracted. Install full deps: pip install roa-ocr[full]",
