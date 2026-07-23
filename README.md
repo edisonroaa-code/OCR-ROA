@@ -13,14 +13,16 @@
 ## ✨ Features
 
 - 🚀 **Native ER296 x64 Engine**: High-throughput C/C++ native engine bindings via `ctypes` & P/Invoke (zero cloud latency or token costs).
-- 🤖 **RAG & AI-Agent Ready**: Direct PDF/image export to clean Markdown, preserving tables and section hierarchy.
-- ⚡ **Cascade Engine Failover**: Intelligent multi-engine cascade (`ER296` → `ocrmypdf` → `Tesseract`) with automatic fallback.
-- ✍️ **Post-OCR Lexical Correction**: Built-in 250+ regex correction rules for Spanish, English, and multilingual text.
-- 📦 **PDF Compression & Optimization**: Ghostscript-powered stream compression (`screen`, `ebook`, `printer`), Fast Web View linearization, and metadata injection.
+- 📊 **Table to Markdown Parser**: Reconstructs complex multi-column tabular data into clean Markdown tables (`| Col 1 | Col 2 |`).
+- 🧩 **Qdrant & Meilisearch RAG Chunker**: Native document segmentation (`process_to_chunks()`) with page metadata ready for vector DBs and LLM context windows.
+- ✍️ **Smart Paragraph Unwrapping & Lexical Fixes**: 250+ contextual rules plus intelligent paragraph de-hyphenation and line un-breaking.
+- 🐳 **Docker Containerization**: Multi-stage `Dockerfile` and `docker-compose.yml` for 1-command deployment on Linux & Cloud servers.
+- ⚡ **Cascade Engine Failover**: Multi-engine cascade (`ER296` → `ocrmypdf` → `Tesseract`) guaranteeing zero downtime.
+- 🏷️ **Original Filename Preservation**: Downloaded exports automatically preserve input document names with `-roaOcr` suffix.
 - 🔌 **Universal Interfaces**:
-  - **Python SDK**: Seamless integration in Python scripts.
-  - **REST API (FastAPI)**: Web API with interactive Swagger UI (`/docs`).
-  - **Web Dashboard**: Real-time monitoring dashboard with drag-and-drop file processing.
+  - **Python SDK**: Seamless integration in Python scripts (`process_to_markdown()`, `process_to_chunks()`).
+  - **REST API (FastAPI)**: Industrial Web API (`/api/v1/process/markdown`, `/api/v1/process/chunks`).
+  - **Intent-Driven Dashboard**: Clean, intuitive Web UI at `http://localhost:8000/dashboard`.
   - **Windows COM Automation**: Native COM Server (`Er296ComBridge`) for C#, VBScript, VBA, and Windows AI tools.
   - **CLI**: Batch processor for processing local folders.
 
