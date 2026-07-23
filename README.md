@@ -127,7 +127,24 @@ print(result.markdown)
 print(f"Pages: {result.pages} | Engine: {result.engine} | Corrections: {result.corrections}")
 ```
 
-### 3. Docker (Zero-Config Server)
+### 3. Contextual Dual Architecture (RAG / LLM Mode)
+
+When building pipelines for AI Agents or RAG (Retrieval-Augmented Generation), OCR noise like signatures, stamps, and illegible handwritten scribbles can poison the LLM's context window. ROA OCR introduces a **Contextual Dual Architecture** to fix this.
+
+Just set `llm_mode=True` to activate advanced heuristics that semantically tag these artifacts instead of emitting garbage text:
+
+```python
+from roa_ocr import process_pdf
+
+# Enable LLM mode to sanitize output for AI consumption
+result = process_pdf("contract_with_signatures.pdf", llm_mode=True)
+
+# "zxqjwv" (illegible signature noise) becomes:
+# [LÍNEA DE FIRMA / SELLO] or [MANUSCRITO ILEGIBLE]
+print(result.markdown)
+```
+
+### 4. Docker (Zero-Config Server)
 
 Run the full REST API and Dashboard instantly:
 ```bash
@@ -135,7 +152,7 @@ docker run -d -p 8000:8000 ghcr.io/edisonroaa-code/roa-ocr:latest
 ```
 Visit `http://localhost:8000/dashboard` in your browser.
 
-### 3. Command Line Interface (CLI)
+### 5. Command Line Interface (CLI)
 
 ```bash
 # Process all files in PDFS_PENDIENTES/
