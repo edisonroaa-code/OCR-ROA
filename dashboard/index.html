@@ -3,34 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ROA OCR — Enterprise Split Workbench v2.2</title>
+  <title>ROA OCR</title>
   
-  <!-- Modern Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
   <style>
-    /* ── Design System Tokens (Industrial Dark Slate) ────────────────── */
     :root {
-      --bg-base: #090d16;
-      --bg-surface: #111827;
-      --bg-card: #1f293d;
-      --bg-input: #151d2a;
-      --border-color: #2b384e;
-      --border-accent: #3b82f6;
-      
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
-      --text-dim: #6b7280;
-      
+      --bg-base: #0f172a;
+      --bg-surface: #1e293b;
+      --bg-card: #334155;
+      --border-color: #475569;
+      --accent-blue: #2563eb;
       --accent-emerald: #10b981;
-      --accent-blue: #3b82f6;
-      --accent-amber: #f59e0b;
-      --accent-cyan: #06b6d4;
-      --accent-danger: #ef4444;
-
-      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-main: 'Inter', sans-serif;
       --font-code: 'JetBrains Mono', monospace;
     }
 
@@ -38,561 +27,351 @@
     body {
       background-color: var(--bg-base);
       color: var(--text-main);
-      font-family: var(--font-ui);
-      height: 100vh;
+      font-family: var(--font-main);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
     }
 
-    /* ── Top Header ─────────────────────────────────────────────────── */
     header {
-      background-color: var(--bg-surface);
+      background: var(--bg-surface);
       border-bottom: 1px solid var(--border-color);
-      height: 56px;
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .status-badge {
+      font-size: 12px; font-weight: 500;
+      color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 4px 10px; border-radius: 4px;
+    }
+
+    main {
+      max-width: 800px;
+      width: 100%;
+      margin: 40px auto;
       padding: 0 20px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .brand-icon {
-      font-size: 22px;
-      background: rgba(59, 130, 246, 0.15);
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-    }
-    .brand-title {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-    }
-    .brand-tag {
-      font-size: 11px;
-      font-weight: 600;
-      background: rgba(16, 185, 129, 0.15);
-      color: var(--accent-emerald);
-      padding: 2px 8px;
-      border-radius: 4px;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    .header-status {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-size: 12px;
-    }
-    .status-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--bg-input);
-      padding: 4px 12px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: var(--accent-emerald);
-    }
-
-    /* ── Main Layout (Split Workbench) ───────────────────────────────── */
-    .workbench {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    /* ── Sidebar Controls (Left Drawer) ─────────────────────────────── */
-    .sidebar {
-      width: 320px;
-      background-color: var(--bg-surface);
-      border-right: 1px solid var(--border-color);
-      display: flex;
       flex-direction: column;
-      flex-shrink: 0;
-      overflow-y: auto;
+      gap: 28px;
     }
-    .sidebar-section {
-      padding: 16px;
-      border-bottom: 1px solid var(--border-color);
-    }
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--text-muted);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
-    /* Dropzone */
+    .intent-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .intent-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px 12px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .intent-card:hover {
+      border-color: var(--accent-blue);
+    }
+    .intent-card.selected {
+      border-color: var(--accent-blue);
+      background: rgba(37, 99, 235, 0.15);
+      color: #fff;
+    }
+
     .dropzone {
+      background: var(--bg-surface);
       border: 2px dashed var(--border-color);
       border-radius: 8px;
-      padding: 24px 16px;
+      padding: 32px 20px;
       text-align: center;
-      background: var(--bg-input);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: border-color 0.15s;
     }
     .dropzone:hover, .dropzone.dragover {
       border-color: var(--accent-blue);
-      background: rgba(59, 130, 246, 0.05);
     }
-    .dropzone-icon { font-size: 28px; margin-bottom: 8px; color: var(--accent-blue); }
-    .dropzone-text { font-size: 13px; font-weight: 500; color: var(--text-main); }
-    .dropzone-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-    #file-input { display: none; }
+    .dropzone-text { font-size: 14px; font-weight: 600; }
+    .dropzone-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
-    /* Form Controls */
-    .form-group {
-      margin-bottom: 12px;
+    details.config-advanced {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px 16px;
     }
-    .form-group label {
-      display: block;
-      font-size: 12px;
+    details.config-advanced summary {
+      font-size: 13px;
       font-weight: 500;
       color: var(--text-muted);
-      margin-bottom: 4px;
+      cursor: pointer;
+      user-select: none;
     }
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-color);
+    }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
     .form-control {
-      width: 100%;
-      background: var(--bg-input);
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-family: var(--font-ui);
-      outline: none;
-    }
-    .form-control:focus {
-      border-color: var(--accent-blue);
-    }
-
-    .btn {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: none;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: background 0.2s;
-    }
-    .btn-primary {
-      background: var(--accent-blue);
-      color: #fff;
-    }
-    .btn-primary:hover { background: #2563eb; }
-    .btn-secondary {
-      background: rgba(6, 182, 212, 0.15);
-      color: var(--accent-cyan);
-      border: 1px solid rgba(6, 182, 212, 0.3);
-      margin-top: 8px;
-    }
-    .btn-secondary:hover { background: rgba(6, 182, 212, 0.25); }
-
-    /* ── Split Viewers (Center/Right Workspace) ──────────────────────── */
-    .split-workspace {
-      flex: 1;
-      display: flex;
-      background: var(--bg-base);
-    }
-    
-    /* Left Viewer: Original PDF */
-    .viewer-pane {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid var(--border-color);
-    }
-    .pane-header {
-      height: 40px;
-      background: var(--bg-surface);
-      border-bottom: 1px solid var(--border-color);
-      padding: 0 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .pane-content {
-      flex: 1;
-      position: relative;
-      background: #111;
-    }
-    iframe.pdf-viewer {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    .placeholder-view {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: var(--text-dim);
-      font-size: 13px;
-      gap: 12px;
-    }
-
-    /* Right Viewer: Inspector Tabs (Markdown / Qdrant Chunks) */
-    .inspector-tabs {
-      display: flex;
-      gap: 2px;
-      background: var(--bg-input);
-      padding: 4px;
-      border-radius: 6px;
-    }
-    .tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 4px 12px;
-      font-size: 12px;
-      font-weight: 500;
+      padding: 6px 10px;
       border-radius: 4px;
-      cursor: pointer;
-    }
-    .tab-btn.active {
-      background: var(--bg-card);
-      color: var(--text-main);
-      font-weight: 600;
+      font-size: 13px;
     }
 
-    .code-inspector {
-      flex: 1;
-      padding: 16px;
+    .btn-action {
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s;
+    }
+    .btn-action:hover { background: #1d4ed8; }
+
+    .result-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      display: none;
+    }
+    .result-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .result-title { font-size: 14px; font-weight: 600; }
+    .result-box {
+      background: var(--bg-base);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 14px;
+      max-height: 360px;
       overflow-y: auto;
       font-family: var(--font-code);
       font-size: 12px;
-      line-height: 1.6;
+      line-height: 1.5;
       white-space: pre-wrap;
-      color: #e5e7eb;
-      background: #0d1117;
+      margin-bottom: 12px;
     }
-
-    /* Action bar below inspector */
-    .inspector-actions {
-      padding: 12px 16px;
-      background: var(--bg-surface);
-      border-top: 1px solid var(--border-color);
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-    }
+    .action-row { display: flex; gap: 10px; justify-content: flex-end; }
     .btn-sm {
-      padding: 6px 12px;
-      font-size: 12px;
-      border-radius: 4px;
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
-      background: var(--bg-input);
       color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 12px; font-weight: 500;
       cursor: pointer;
     }
-    .btn-sm:hover { background: var(--bg-card); }
+    .btn-sm:hover { background: var(--border-color); }
   </style>
 </head>
 <body>
 
-  <!-- Top Header -->
   <header>
-    <div class="brand">
-      <div class="brand-icon">🐺</div>
-      <div class="brand-title">ROA OCR Workbench</div>
-      <div class="brand-tag">v2.2 Enterprise</div>
-    </div>
-    
-    <div class="header-status">
-      <div class="status-pill">
-        <div class="status-dot"></div>
-        <span>Motor ER296 Nativo (x64)</span>
-      </div>
-      <div class="status-pill">
-        <span>🧩 RAG Chunker: Qdrant & Meilisearch</span>
-      </div>
-    </div>
+    <div class="brand-title">ROA OCR</div>
+    <span class="status-badge">En línea</span>
   </header>
 
-  <!-- Main Split Workbench -->
-  <div class="workbench">
-    
-    <!-- Sidebar Left: Controls -->
-    <div class="sidebar">
-      <div class="sidebar-section">
-        <div class="section-title">1. Documento de Entrada</div>
-        <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
-          <div class="dropzone-icon">📄</div>
-          <div class="dropzone-text" id="file-name-label">Arrastra un PDF o Imagen</div>
-          <div class="dropzone-sub">Soporta .pdf, .bmp, .png, .jpg, .tiff</div>
-        </div>
-        <input type="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg,.bmp,.tiff">
+  <main>
+    <section>
+      <div class="section-label">Operación</div>
+      <div class="intent-grid">
+        <div class="intent-card selected" onclick="selectIntent('markdown', this)">Markdown</div>
+        <div class="intent-card" onclick="selectIntent('chunks', this)">RAG Chunks</div>
+        <div class="intent-card" onclick="selectIntent('pdf', this)">PDF Buscable</div>
+        <div class="intent-card" onclick="selectIntent('compress', this)">Comprimir</div>
       </div>
+    </section>
 
-      <div class="sidebar-section">
-        <div class="section-title">2. Parámetros del Motor OCR</div>
-        
+    <section>
+      <div class="section-label">Documento</div>
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+        <div class="dropzone-text" id="file-label">Arrastra o selecciona un archivo</div>
+        <div class="dropzone-sub">PDF, PNG, JPG, TIFF, BMP</div>
+      </div>
+      <input type="file" id="file-input" style="display:none;" accept=".pdf,.png,.jpg,.jpeg,.bmp,.tiff">
+    </section>
+
+    <details class="config-advanced">
+      <summary>Configuración avanzada</summary>
+      <div class="config-grid">
         <div class="form-group">
-          <label>Motor Principal</label>
-          <select class="form-control" id="opt-engine">
-            <option value="er296">🚀 ER296 Nativo (Recomendado)</option>
-            <option value="auto">⚡ Automático (Cascada)</option>
-            <option value="ocrmypdf">🔧 ocrmypdf + Ghostscript</option>
-            <option value="tesseract">🔬 Tesseract Directo</option>
+          <label>Motor</label>
+          <select class="form-control" id="cfg-engine">
+            <option value="auto">Automático</option>
+            <option value="er296">ER296 Nativo</option>
+            <option value="ocrmypdf">OCRmyPDF</option>
+            <option value="tesseract">Tesseract</option>
           </select>
         </div>
 
         <div class="form-group">
           <label>Idioma</label>
-          <select class="form-control" id="opt-lang">
-            <option value="spa+eng">Español + Inglés (spa+eng)</option>
-            <option value="spa">Español (spa)</option>
-            <option value="eng">Inglés (eng)</option>
+          <select class="form-control" id="cfg-lang">
+            <option value="spa+eng">Español e Inglés</option>
+            <option value="spa">Español</option>
+            <option value="eng">Inglés</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Resolución (DPI)</label>
-          <select class="form-control" id="opt-dpi">
-            <option value="300">300 DPI (Calidad Estándar)</option>
-            <option value="400">400 DPI (Alta Definición)</option>
-            <option value="150">150 DPI (Borrador)</option>
+          <label>Resolución</label>
+          <select class="form-control" id="cfg-quality">
+            <option value="printer">Alta (300 DPI)</option>
+            <option value="ebook">Media (150 DPI)</option>
+            <option value="screen">Baja (72 DPI)</option>
           </select>
         </div>
-      </div>
-
-      <div class="sidebar-section">
-        <div class="section-title">3. Configuración RAG / Vectores</div>
-        
-        <div class="form-group">
-          <label>Tamaño de Chunk (caracteres)</label>
-          <input type="number" class="form-control" id="opt-chunk-size" value="500" min="100" max="2000">
-        </div>
 
         <div class="form-group">
-          <label>Overlap / Solapamiento</label>
-          <input type="number" class="form-control" id="opt-chunk-overlap" value="50" min="0" max="200">
+          <label>Chunk Size</label>
+          <input type="number" class="form-control" id="cfg-chunk-size" value="500">
         </div>
       </div>
+    </details>
 
-      <div class="sidebar-section" style="margin-top:auto;">
-        <button class="btn btn-primary" onclick="processPDF()">
-          <span>⚡ Procesar PDF Completo</span>
-        </button>
-        <button class="btn btn-secondary" onclick="extractChunks()">
-          <span>🧩 Extraer Chunks para RAG</span>
-        </button>
+    <button class="btn-action" onclick="executeJob()">Procesar</button>
+
+    <section class="result-card" id="result-card">
+      <div class="result-header">
+        <div class="result-title">Resultado</div>
+        <span id="result-metrics" style="font-size:12px; color:var(--text-muted);"></span>
       </div>
-    </div>
-
-    <!-- Center/Right Split Workspace -->
-    <div class="split-workspace">
-      
-      <!-- Left Pane: PDF Viewer -->
-      <div class="viewer-pane">
-        <div class="pane-header">
-          <span>DOCUMENTO DE ENTRADA (VISOR INTERACTIVO)</span>
-          <span id="pdf-page-info" style="color:var(--text-muted);">Sin archivo seleccionado</span>
-        </div>
-        <div class="pane-content" id="pdf-viewer-container">
-          <div class="placeholder-view">
-            <div style="font-size:36px;">📂</div>
-            <div>Selecciona un archivo PDF para visualizarlo aquí</div>
-          </div>
-        </div>
+      <div class="result-box" id="result-box"></div>
+      <div class="action-row">
+        <button class="btn-sm" onclick="copyResult()">Copiar</button>
+        <button class="btn-sm" onclick="downloadResult()">Descargar</button>
       </div>
-
-      <!-- Right Pane: Inspector / Extracted RAG Payload -->
-      <div class="viewer-pane">
-        <div class="pane-header">
-          <span>RESULTADO ESTRUCTURADO / INSPECTOR RAG</span>
-          
-          <div class="inspector-tabs">
-            <button class="tab-btn active" id="tab-md" onclick="switchTab('md')">Markdown</button>
-            <button class="tab-btn" id="tab-qdrant" onclick="switchTab('qdrant')">Qdrant Chunks</button>
-            <button class="tab-btn" id="tab-meili" onclick="switchTab('meili')">Meilisearch JSON</button>
-          </div>
-        </div>
-
-        <div class="code-inspector" id="inspector-output">
-# Bienvenid@ al Workbench ROA OCR Enterprise v2.2
-
-Suba un archivo PDF o imagen para visualizar el documento original a la izquierda 
-y la extracción en Markdown estructurado o Chunks vectoriales para Qdrant/Meilisearch aquí.
-
-- Motor Nativo: ER296 x64 C/C++ Engine
-- Salida RAG: Markdown + Metadatos por Página
-- Parser de Tablas: Habilitado (| Col 1 | Col 2 |)
-        </div>
-
-        <div class="inspector-actions">
-          <button class="btn-sm" onclick="copyInspectorText()">📋 Copiar Texto</button>
-          <button class="btn-sm" onclick="downloadResult()">💾 Descargar Resultado</button>
-        </div>
-      </div>
-
-    </div>
-
-  </div>
+    </section>
+  </main>
 
   <script>
-    let currentFile = null;
-    let lastResultData = null;
-    let currentTab = 'md';
+    let selectedIntent = 'markdown';
+    let selectedFile = null;
+    let lastOutput = '';
 
-    // File Selection
+    function selectIntent(intent, element) {
+      selectedIntent = intent;
+      document.querySelectorAll('.intent-card').forEach(c => c.classList.remove('selected'));
+      element.classList.add('selected');
+    }
+
     const fileInput = document.getElementById('file-input');
     const dropzone = document.getElementById('dropzone');
-    const fileNameLabel = document.getElementById('file-name-label');
+    const fileLabel = document.getElementById('file-label');
 
     fileInput.addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
-        currentFile = e.target.files[0];
-        fileNameLabel.innerText = currentFile.name;
-        loadPDFPreview(currentFile);
+        selectedFile = e.target.files[0];
+        fileLabel.innerText = selectedFile.name;
       }
     });
 
-    dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.classList.add('dragover');
-    });
-
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.classList.remove('dragover');
-    });
-
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('dragover'); });
     dropzone.addEventListener('drop', (e) => {
       e.preventDefault();
       dropzone.classList.remove('dragover');
       if (e.dataTransfer.files.length > 0) {
-        currentFile = e.dataTransfer.files[0];
-        fileNameLabel.innerText = currentFile.name;
-        loadPDFPreview(currentFile);
+        selectedFile = e.dataTransfer.files[0];
+        fileLabel.innerText = selectedFile.name;
       }
     });
 
-    function loadPDFPreview(file) {
-      const container = document.getElementById('pdf-viewer-container');
-      const fileUrl = URL.createObjectURL(file);
-      container.innerHTML = `<iframe class="pdf-viewer" src="${fileUrl}"></iframe>`;
-      document.getElementById('pdf-page-info').innerText = file.name;
-    }
-
-    async function extractChunks() {
-      if (!currentFile) {
-        alert('Por favor selecciona un archivo PDF o Imagen primero.');
+    async function executeJob() {
+      if (!selectedFile) {
+        alert('Selecciona un archivo.');
         return;
       }
 
-      const inspector = document.getElementById('inspector-output');
-      inspector.innerText = '⚙️ Extrayendo Chunks RAG con motor ER296...';
+      const resultCard = document.getElementById('result-card');
+      const resultBox = document.getElementById('result-box');
+      const resultMetrics = document.getElementById('result-metrics');
+
+      resultCard.style.display = 'block';
+      resultBox.innerText = 'Procesando...';
+      resultMetrics.innerText = '';
 
       const formData = new FormData();
-      formData.append('file', currentFile);
-      formData.append('chunk_size', document.getElementById('opt-chunk-size').value);
-      formData.append('chunk_overlap', document.getElementById('opt-chunk-overlap').value);
-      formData.append('lang', document.getElementById('opt-lang').value);
-      formData.append('engine', document.getElementById('opt-engine').value);
+      formData.append('file', selectedFile);
+      formData.append('engine', document.getElementById('cfg-engine').value);
+      formData.append('lang', document.getElementById('cfg-lang').value);
+      formData.append('chunk_size', document.getElementById('cfg-chunk-size').value);
+
+      let endpoint = '/api/v1/process/markdown';
+      if (selectedIntent === 'chunks') endpoint = '/api/v1/process/chunks';
 
       try {
-        const response = await fetch('/api/v1/process/chunks', {
+        const start = Date.now();
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'X-API-Key': 'roa-dev-key-2024' },
           body: formData
         });
 
-        if (!response.ok) throw new Error(`Error server: ${response.statusText}`);
-        
-        lastResultData = await response.json();
-        renderTabContent();
+        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+
+        const data = await response.json();
+        const elapsed = ((Date.now() - start) / 1000).toFixed(2);
+        resultMetrics.innerText = `${elapsed}s | ${data.pages || data.total_pages || 1} pág.`;
+
+        if (selectedIntent === 'markdown') {
+          lastOutput = data.full_markdown || 'Sin contenido.';
+        } else if (selectedIntent === 'chunks') {
+          lastOutput = JSON.stringify(data.chunks || [], null, 2);
+        } else {
+          lastOutput = JSON.stringify(data, null, 2);
+        }
+
+        resultBox.innerText = lastOutput;
       } catch (err) {
-        inspector.innerText = `❌ Error procesando archivo: ${err.message}`;
+        resultBox.innerText = `Error: ${err.message}`;
       }
     }
 
-    async function processPDF() {
-      if (!currentFile) {
-        alert('Por favor selecciona un archivo PDF o Imagen primero.');
-        return;
-      }
-
-      const inspector = document.getElementById('inspector-output');
-      inspector.innerText = '⚡ Procesando documento completo con ER296 Engine...';
-
-      const formData = new FormData();
-      formData.append('file', currentFile);
-      formData.append('lang', document.getElementById('opt-lang').value);
-      formData.append('engine', document.getElementById('opt-engine').value);
-
-      try {
-        const response = await fetch('/api/v1/process/markdown', {
-          method: 'POST',
-          headers: { 'X-API-Key': 'roa-dev-key-2024' },
-          body: formData
-        });
-
-        if (!response.ok) throw new Error(`Error server: ${response.statusText}`);
-
-        lastResultData = await response.json();
-        renderTabContent();
-      } catch (err) {
-        inspector.innerText = `❌ Error al procesar: ${err.message}`;
-      }
-    }
-
-    function switchTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`tab-${tab}`).classList.add('active');
-      renderTabContent();
-    }
-
-    function renderTabContent() {
-      const inspector = document.getElementById('inspector-output');
-      if (!lastResultData) return;
-
-      if (currentTab === 'md') {
-        inspector.innerText = lastResultData.full_markdown || 'Sin contenido Markdown disponible.';
-      } else if (currentTab === 'qdrant') {
-        const qdrantPoints = (lastResultData.chunks || []).map(c => c.qdrant_payload);
-        inspector.innerText = JSON.stringify(qdrantPoints, null, 2);
-      } else if (currentTab === 'meili') {
-        const meiliDocs = (lastResultData.chunks || []).map(c => c.meilisearch_doc);
-        inspector.innerText = JSON.stringify(meiliDocs, null, 2);
-      }
-    }
-
-    function copyInspectorText() {
-      const inspector = document.getElementById('inspector-output');
-      navigator.clipboard.writeText(inspector.innerText);
-      alert('Texto copiado al portapapeles.');
+    function copyResult() {
+      navigator.clipboard.writeText(lastOutput);
     }
 
     function downloadResult() {
-      const inspector = document.getElementById('inspector-output');
-      const ext = currentTab === 'md' ? 'md' : 'json';
-      const blob = new Blob([inspector.innerText], { type: 'text/plain;charset=utf-8' });
+      const ext = selectedIntent === 'markdown' ? 'md' : 'json';
+      let baseName = 'documento';
+      if (selectedFile && selectedFile.name) {
+        baseName = selectedFile.name.replace(/\.[^/.]+$/, "");
+      }
+      const outName = `${baseName}-roaOcr.${ext}`;
+      const blob = new Blob([lastOutput], { type: 'text/plain;charset=utf-8' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `roa_rag_export.${ext}`;
+      a.download = outName;
       a.click();
     }
   </script>

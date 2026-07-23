@@ -184,11 +184,14 @@ async def process_markdown_endpoint(
             cfg = PipelineConfig(lang=lang, dpi=dpi, skip_if_has_text=False, ocr_engine=engine.value)
             pipe = PDFPipeline(config=cfg, er296_dir=settings.er296_dir)
             pipe.initialize()
-            return pipe.process_to_markdown(tmp_input)
+            return pipe.process_to_markdown(tmp_input, original_filename=file.filename)
 
         return await loop.run_in_executor(None, _run)
     finally:
-        tmp_input.unlink(missing_ok=True)
+        try:
+            tmp_input.unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 @router.post(
@@ -222,11 +225,14 @@ async def process_chunks_endpoint(
             cfg = PipelineConfig(lang=lang, dpi=dpi, skip_if_has_text=False, ocr_engine=engine.value)
             pipe = PDFPipeline(config=cfg, er296_dir=settings.er296_dir)
             pipe.initialize()
-            return pipe.process_to_chunks(tmp_input, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+            return pipe.process_to_chunks(tmp_input, chunk_size=chunk_size, chunk_overlap=chunk_overlap, original_filename=file.filename)
 
         return await loop.run_in_executor(None, _run)
     finally:
-        tmp_input.unlink(missing_ok=True)
+        try:
+            tmp_input.unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 async def _run_pipeline(src: Path, dst: Path, options: ProcessOptions) -> dict:

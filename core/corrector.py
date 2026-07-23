@@ -17,10 +17,6 @@ log = logging.getLogger("roa.corrector")
 
 # Sustituciones literales (case-sensitive donde importa)
 LITERAL_FIXES = {
-    # Caracteres mal interpretados por OCR
-    "0": "o",    # solo en contexto de palabras
-    "l": "l",
-    "rn": "m",
     # Tildes y diacríticos comunes mal reconocidos
     "á": "á",
     "é": "é",
@@ -38,6 +34,9 @@ LITERAL_FIXES = {
 # Patrones regex: (patrón, reemplazo, flags)
 REGEX_RULES = [
     # ── Números confundidos con letras ──────────────────────────────────────
+    (r'(\d)[oO](\d)', r'\g<1>0\g<2>', 0),                  # 2o26 -> 2026
+    (r'(\d)[oO][oO](\d)', r'\g<1>00\g<2>', 0),              # 2oo8 -> 2008
+    (r'(\d+)[oO]\b', r'\1°', 0),                          # 39o -> 39°
     # "0" como "O" en medio de texto
     (r'\b0([a-záéíóúüñ])', r'o\1', re.IGNORECASE),
     (r'([a-záéíóúüñ])0\b', r'\1o', re.IGNORECASE),
@@ -52,8 +51,8 @@ REGEX_RULES = [
     # Espacio faltante después de punto (si le sigue mayúscula)
     (r'\.([A-ZÁÉÍÓÚ])', r'. \1', 0),
     # ── Ruido OCR de sellos, marcas de agua y guiones de línea ─────────────
-    (r'(\w)-\n(\w)', r'\1\2', 0),                       # De-hyphenation (corte de palabra)
-    (r'([a-záéíóúüñ,;])\n([a-záéíóúüñ])', r'\1 \2', 0),    # Unwrapping: re-unir párrafos cortados a mitad de frase
+    (r'(\b\w+)-\s*\n\s*(\w+\b)', r'\1\2', 0),            # De-hyphenation (corte de palabra)
+    (r'([A-Za-z0-9áéíóúÁÉÍÓÚñÑ,;’"”])\n([A-Za-z0-9áéíóúÁÉÍÓÚñÑ‘"“])', r'\1 \2', 0), # Unwrapping inteligente de saltos entre palabras
     (r'[=~_]{3,}', '', 0),                              # Filas de === o ~~~
     (r'\b[b-df-hj-np-tv-z]{4,}\b', '', re.IGNORECASE),   # Palabras de solo consonantes (ruido OCR)
     (r'^[^\w\s#\-*]{1,4}$', '', re.MULTILINE),          # Símbolos basura aislados al inicio de línea

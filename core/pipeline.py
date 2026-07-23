@@ -273,66 +273,87 @@ class PDFPipeline:
 
         return results
 
-    def process_to_markdown(self, src: Path) -> dict:
+    def process_to_markdown(self, src: Path, original_filename: Optional[str] = None) -> dict:
         """
         Extrae y convierte el contenido del PDF a Markdown estructurado con tablas formateadas.
         """
         if not self._initialized:
             self.initialize()
 
+        doc_name = original_filename or src.name
+
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             tmp_dst = Path(tmp.name)
 
         try:
             res = self.process(src, tmp_dst)
+            target_pdf = tmp_dst if (tmp_dst.exists() and tmp_dst.stat().st_size > 0) else src
+            
             from pypdf import PdfReader
-            reader = PdfReader(str(tmp_dst if tmp_dst.exists() else src))
+            reader = PdfReader(str(target_pdf))
             
             page_mds = []
-            full_md = f"# Documento: {src.name}\n\n"
+            full_md = f"# Documento: {doc_name}\n\n"
             
-            for idx, page in enumerate(reader.pages, 1):
-                raw_txt = page.extract_text() or ""
-                
-                # Si PyPDF no extrajo texto (p.ej. capa de texto ausente o raster puro), realizar extracción directa de página
-                if not raw_txt or len(raw_txt.strip()) < 10:
-                    try:
-                        import fitz
-                        from PIL import Image
-                        import pytesseract
-                        doc = fitz.open(str(tmp_dst if tmp_dst.exists() else src))
-                        if idx <= len(doc):
-                            pix = doc[idx - 1].get_pixmap(dpi=self.config.dpi)
-                            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                            raw_txt = pytesseract.image_to_string(img, lang=self.config.lang.replace(" ", "+"))
-                    except Exception as ex:
-                        log.warning(f"Extracción directa OCR para página {idx} falló: {ex}")
+            doc = None
+            try:
+                import fitz
+                doc = fitz.open(str(target_pdf))
+            except Exception as ex:
+                log.warning(f"PyMuPDF (fitz) no pudo abrir {target_pdf}: {ex}")
 
-                if self.config.run_correction:
-                    raw_txt = self.corrector.correct_text(raw_txt, lang=self.config.lang)
-                
-                table_formatted_txt = self.table_parser.parse_text_to_tables(raw_txt)
-                page_header = f"## Página {idx}\n\n"
-                page_md = page_header + table_formatted_txt
-                page_mds.append({"page": idx, "markdown": page_md, "char_count": len(table_formatted_txt)})
-                full_md += page_md + "\n\n---\n\n"
+            try:
+                import pytesseract
+                for idx, page in enumerate(reader.pages, 1):
+                    raw_txt = page.extract_text() or ""
+                    
+                    # Si PyPDF no extrajo texto, realizar extracción directa de la página con fitz + pytesseract
+                    if not raw_txt or len(raw_txt.strip()) < 10:
+                        if doc and idx <= len(doc):
+                            try:
+                                from PIL import Image
+                                pix = doc[idx - 1].get_pixmap(dpi=self.config.dpi)
+                                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                                raw_txt = pytesseract.image_to_string(img, lang=self.config.lang.replace(" ", "+"))
+                            except Exception as ex:
+                                log.warning(f"Extracción directa OCR pág {idx} falló: {ex}")
+
+                    if self.config.run_correction:
+                        raw_txt = self.corrector.correct_text(raw_txt, lang=self.config.lang)
+                    
+                    table_formatted_txt = self.table_parser.parse_text_to_tables(raw_txt)
+                    page_header = f"## Página {idx}\n\n"
+                    page_md = page_header + table_formatted_txt
+                    page_mds.append({"page": idx, "markdown": page_md, "char_count": len(table_formatted_txt)})
+                    full_md += page_md + "\n\n---\n\n"
+            finally:
+                if doc:
+                    try:
+                        doc.close()
+                    except Exception:
+                        pass
 
             return {
                 "success": res.success,
                 "engine_used": res.engine_used,
+                "source_file": doc_name,
                 "pages": len(reader.pages),
                 "full_markdown": full_md,
                 "page_details": page_mds,
             }
         finally:
-            tmp_dst.unlink(missing_ok=True)
+            try:
+                tmp_dst.unlink(missing_ok=True)
+            except Exception:
+                pass
 
-    def process_to_chunks(self, src: Path, chunk_size: int = 500, chunk_overlap: int = 50) -> dict:
+    def process_to_chunks(self, src: Path, chunk_size: int = 500, chunk_overlap: int = 50, original_filename: Optional[str] = None) -> dict:
         """
         Procesa un PDF y genera chunks de vectores optimizados para Qdrant, Meilisearch y RAG.
         """
-        md_res = self.process_to_markdown(src)
+        md_res = self.process_to_markdown(src, original_filename=original_filename)
         chunker = RAGChunker(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        doc_name = original_filename or src.name
         
         all_chunks = []
         for page_data in md_res.get("page_details", []):
@@ -340,7 +361,7 @@ class PDFPipeline:
             p_md = page_data["markdown"]
             page_chunks = chunker.chunk_text(
                 text=p_md,
-                source_name=src.name,
+                source_name=doc_name,
                 page_number=p_num,
                 engine_used=md_res.get("engine_used", "er296"),
             )
@@ -348,7 +369,7 @@ class PDFPipeline:
 
         return {
             "success": md_res.get("success", False),
-            "source_file": src.name,
+            "source_file": doc_name,
             "engine_used": md_res.get("engine_used", "er296"),
             "total_pages": md_res.get("pages", 0),
             "total_chunks": len(all_chunks),
