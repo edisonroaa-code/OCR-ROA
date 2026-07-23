@@ -18,7 +18,7 @@ from typing import Optional, Union
 from dataclasses import dataclass
 
 
-__version__ = "2.3.0"
+__version__ = "2.4.2"
 __all__ = ["process_pdf", "process_to_markdown", "process_to_chunks", "ROAResult", "main"]
 
 

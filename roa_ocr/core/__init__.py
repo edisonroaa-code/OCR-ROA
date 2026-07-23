@@ -52,4 +52,4 @@ __all__ = [
     "needs_conversion",
 ]
 
-__version__ = "2.3.0"
+__version__ = "2.4.2"
