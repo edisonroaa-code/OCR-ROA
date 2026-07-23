@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roa-ocr"
-version = "2.4.1"
+version = "2.4.2"
 authors = [
   { name = "Edison Roa", email = "soporte@roa.ai" },
 ]
@@ -34,6 +34,9 @@ keywords = [
 dependencies = [
     "Pillow>=10.0.0",
     "pypdf>=4.0.0",
+    "pymupdf>=1.24.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
 ]
 
 [project.optional-dependencies]
@@ -42,8 +45,6 @@ full = [
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.30.0",
     "python-multipart>=0.0.9",
-    "pydantic>=2.7.0",
-    "pydantic-settings>=2.3.0",
     "pytesseract>=0.3.10",
     "ocrmypdf>=16.0.0",
     "pdf2image>=1.17.0",
