@@ -293,6 +293,21 @@ class PDFPipeline:
             
             for idx, page in enumerate(reader.pages, 1):
                 raw_txt = page.extract_text() or ""
+                
+                # Si PyPDF no extrajo texto (p.ej. capa de texto ausente o raster puro), realizar extracción directa de página
+                if not raw_txt or len(raw_txt.strip()) < 10:
+                    try:
+                        import fitz
+                        from PIL import Image
+                        import pytesseract
+                        doc = fitz.open(str(tmp_dst if tmp_dst.exists() else src))
+                        if idx <= len(doc):
+                            pix = doc[idx - 1].get_pixmap(dpi=self.config.dpi)
+                            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                            raw_txt = pytesseract.image_to_string(img, lang=self.config.lang.replace(" ", "+"))
+                    except Exception as ex:
+                        log.warning(f"Extracción directa OCR para página {idx} falló: {ex}")
+
                 if self.config.run_correction:
                     raw_txt = self.corrector.correct_text(raw_txt, lang=self.config.lang)
                 

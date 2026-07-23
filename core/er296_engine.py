@@ -220,27 +220,36 @@ class ER296Engine:
 
         try:
             images = []
+            # 1. Intentar PyMuPDF (fitz) — ultra rápido y sin dependencia de Poppler binario
             try:
-                from pdf2image import convert_from_path
-                images = convert_from_path(str(src), dpi=dpi)
-            except Exception:
-                from pypdf import PdfReader
+                import fitz
                 from PIL import Image
-                import io
+                doc = fitz.open(str(src))
+                for page in doc:
+                    pix = page.get_pixmap(dpi=dpi)
+                    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                    images.append(img)
+            except Exception as e:
+                log.warning(f"PyMuPDF (fitz) no disponible o falló: {e}")
 
-                reader = PdfReader(str(src))
-                for page in reader.pages:
-                    for img_obj in page.images:
-                        images.append(Image.open(io.BytesIO(img_obj.data)))
+            # 2. Fallback a pdf2image si está disponible poppler
+            if not images:
+                try:
+                    from pdf2image import convert_from_path
+                    images = convert_from_path(str(src), dpi=dpi)
+                except Exception:
+                    pass
 
-                if not images:
-                    images = [Image.new("L", (800, 1000), color=255)]
+            if not images:
+                return False, "No se pudieron renderizar las páginas del PDF a imágenes"
 
             from pypdf import PdfWriter, PdfReader as PageReader
             import io
+            import pytesseract
 
             dst.parent.mkdir(parents=True, exist_ok=True)
             writer = PdfWriter()
+            ocr_lang = lang.replace(" ", "+")
 
             for page_idx, img in enumerate(images):
                 img_gray = img.convert("L")
@@ -248,9 +257,11 @@ class ER296Engine:
                 pitch = ((w + 3) // 4) * 4
                 pixel_data = img_gray.tobytes()
 
+                # Ejecutar motor C/C++ nativo ER296
                 success, zones = self.process_image_bytes(pixel_data, w, h, pitch)
                 log.info(f"ER296 OCR Página {page_idx+1}: zones={zones}, status={success}")
 
+                # Guardar página como PDF
                 img_io = io.BytesIO()
                 img.save(img_io, format="PDF", resolution=dpi)
                 img_io.seek(0)
@@ -260,9 +271,10 @@ class ER296Engine:
             with open(dst, "wb") as f:
                 writer.write(f)
 
+            log.info(f"✅ ER296 procesó exitosamente {len(images)} páginas en {src.name}")
             return True, ""
         except Exception as e:
-            log.error(f"Error en procesamiento ER296 de {src.name}: {e}")
+            log.error(f"❌ Error ER296 procesando PDF {src.name}: {e}")
             return False, str(e)
 
 
