@@ -260,7 +260,7 @@ def _easyocr_extract(src: Path, language: str, dpi: int) -> tuple:
         # Convert PDF pages to images
         from PIL import Image
         try:
-            import fitz
+            import fitz  # type: ignore
             doc = fitz.open(str(src))
             pages = len(doc)
             text_parts = []
@@ -277,7 +277,7 @@ def _easyocr_extract(src: Path, language: str, dpi: int) -> tuple:
 
         # Fallback: pdf2image
         try:
-            from pdf2image import convert_from_path
+            from pdf2image import convert_from_path  # type: ignore
             images = convert_from_path(str(src), dpi=dpi)
             text_parts = []
             for img in images:

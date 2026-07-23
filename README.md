@@ -10,6 +10,8 @@
 
 **ROA OCR** is an enterprise-grade, 100% local, high-performance OCR engine and PDF enhancement pipeline, uniquely tailored for the **Latam and Iberian markets (Spanish, Portuguese, and English)**. Powered by the native **ER296 x64** engine, it converts noisy scanned documents and images into structured Markdown, searchable PDFs, and JSON payloads ready for **RAG pipelines, AI Agents, and LLM context windows**.
 
+> **Note:** The Python wrapper and tools in this repository are MIT Licensed. The included ER296 native binaries are subject to their respective proprietary licenses.
+
 ---
 
 ## ✨ Features
@@ -35,6 +37,8 @@
 ---
 
 ## 📊 Benchmark Comparison
+
+*[See detailed methodology and datasets in benchmarks/README.md](benchmarks/README.md)*
 
 | Feature | **ROA OCR (ER296)** | Tesseract | PyMuPDF4LLM | Cloud Vision APIs |
 |---|:---:|:---:|:---:|:---:|
@@ -97,7 +101,10 @@ flowchart TD
 ### 1. Installation
 
 ```bash
-# Install from source (PyPI coming soon)
+# Install from PyPI (Recommended)
+pip install roa-ocr
+
+# Or install from source
 pip install git+https://github.com/edisonroaa-code/OCR-ROA.git
 
 # Install with full features (API, MCP, LangChain)

@@ -1,0 +1,7 @@
+include roa_ocr/ER296/*.dll
+recursive-include roa_ocr/ER296/OCRResources *
+prune roa_ocr/ER296/.venv
+prune roa_ocr/ER296/Er296ComBridge
+prune roa_ocr/ER296/Er296ComBridge.Tests
+prune roa_ocr/ER296/integration-demo
+prune roa_ocr/ER296/native-wrapper

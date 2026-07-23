@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roa-ocr"
-version = "2.4.0"
+version = "2.4.1"
 authors = [
   { name = "Edison Roa", email = "soporte@roa.ai" },
 ]
@@ -105,6 +105,8 @@ include = ["roa_ocr*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.html", "*.json"]
+"roa_ocr.ER296" = ["*.dll", "*.bin", "*.ocr", "*.arr", "*.ilex", "*.res", "*.dic"]
+"roa_ocr.ER296.OCRResources" = ["*"]
 
 [tool.ruff]
 line-length = 100
