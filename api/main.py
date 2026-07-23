@@ -93,17 +93,17 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="ROA OCR API",
     description=(
-        "## 🐺 ROA OCR — PDF Enhancement & Correction API\n\n"
-        "Plataforma especializada en mejora y corrección masiva de PDFs.\n\n"
-        "### Características\n"
-        "- **OCR de alta precisión**: Motor ER296 Nativo + Tesseract fallback\n"
-        "- **Corrección post-OCR**: 250+ reglas para español e inglés\n"
-        "- **Optimización**: Compresión Ghostscript, metadatos, linearización\n"
-        "- **Procesamiento masivo**: Queue async con Celery+Redis o threading\n"
-        "- **84 idiomas**: Español, inglés, árabe, chino, japonés, y más\n\n"
+        "## 🐺 ROA OCR — Enterprise Native OCR Pipeline & Integration Suite\n\n"
+        "Plataforma industrial para orquestación de OCR nativo, corrección léxica y optimización de documentos para RAG e IA.\n\n"
+        "### Arquitectura del Sistema\n"
+        "- **Motor Nativo ER296**: Bindings C/C++ x64 + cascada de fallback (ocrmypdf/Tesseract)\n"
+        "- **Corrector Léxico**: 250+ reglas léxicas contextuales para español e inglés\n"
+        "- **Optimización**: Compresión Ghostscript, linearización y metadatos\n"
+        "- **Procesamiento Asíncrono**: Cola de tareas Celery + Redis o Threading local\n"
+        "- **Soporte Multilingüe**: Más de 84 idiomas respaldados\n\n"
         "### Autenticación\n"
-        "Incluye el header `X-API-Key: <tu-key>` en todas las requests.\n"
-        "Default para desarrollo: `roa-dev-key-2024`"
+        "Incluye el header `X-API-Key: <tu-key>` en todas las solicitudes.\n"
+        "Key por defecto en desarrollo: `roa-dev-key-2024`"
     ),
     version="2.0.0",
     contact={"name": "ROA OCR", "email": "soporte@roa.ai"},

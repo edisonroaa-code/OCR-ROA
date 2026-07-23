@@ -57,8 +57,19 @@ flowchart TD
         L[Windows COM Server]
     end
     
-    H --> Execution Interfaces
 ```
+
+---
+
+## 🏛️ Ecosystem & Component Architecture
+
+**ROA OCR** is designed as a **high-performance, production-grade enterprise OCR pipeline & integration suite**. Rather than re-inventing basic optical recognition primitives in low-level code, ROA OCR unifies and orchestrates specialized high-performance components into an end-to-end local-first workflow:
+
+- 🚀 **ER296 Native Engine Layer (`ER296/`)**: Native C/C++ x64 binary engine bindings via P/Invoke & `ctypes` (`idrsocr15.dll`, `idrskrn15.dll`, `idrsprepro15.dll`), providing raw execution speed (sub-second per page) without cloud API latency or token costs.
+- ⚡ **Cascading Fallback Layer**: Multi-engine failover (`ER296` → `ocrmypdf` → `Tesseract`) guaranteeing zero-downtime document ingestion.
+- ✍️ **Lexical Post-Correction Engine (`core/corrector.py`)**: Custom rule engine applying 250+ contextual regex substitutions tailored for Spanish/English legal, administrative, and technical documents.
+- 📦 **Compression & Optimization Engine (`core/optimizer.py`)**: Ghostscript `pdfwrite` stream compressor and *Fast Web View* linearizer.
+- 🔌 **Universal Delivery Layer**: Python SDK, FastAPI REST API, Web Dashboard, and native Windows COM Automation (`Er296ComBridge.Er296OcrComService`).
 
 ---
 
