@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  roa-ocr-api:
+    build: .
+    container_name: roa_ocr_api
+    ports:
+      - "8000:8000"
+    environment:
+      - ROA_ENGINE=auto
+      - ROA_LANG=spa+eng
+      - ROA_HOST=0.0.0.0
+      - ROA_PORT=8000
+      - ROA_API_KEYS=roa-dev-key-2024
+    volumes:
+      - ./PDFS_PENDIENTES:/app/PDFS_PENDIENTES
+      - ./PDFS_OCR:/app/PDFS_OCR
+      - ./logs:/app/logs
+    restart: unless-stopped

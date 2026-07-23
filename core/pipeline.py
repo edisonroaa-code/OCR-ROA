@@ -13,6 +13,8 @@ from typing import Optional
 from core.engine import UnifiedOCREngine
 from core.corrector import PostOCRCorrector
 from core.optimizer import PDFOptimizer
+from core.table_parser import TableParser
+from core.rag_chunker import RAGChunker
 
 log = logging.getLogger("roa.pipeline")
 
@@ -103,6 +105,9 @@ class PDFPipeline:
             use_compression=self.config.run_optimization,
             quality=self.config.compress_quality,
         )
+
+        # Parser de Tablas
+        self.table_parser = TableParser()
 
         self._initialized = False
 
@@ -268,8 +273,76 @@ class PDFPipeline:
 
         return results
 
+    def process_to_markdown(self, src: Path) -> dict:
+        """
+        Extrae y convierte el contenido del PDF a Markdown estructurado con tablas formateadas.
+        """
+        if not self._initialized:
+            self.initialize()
+
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp_dst = Path(tmp.name)
+
+        try:
+            res = self.process(src, tmp_dst)
+            from pypdf import PdfReader
+            reader = PdfReader(str(tmp_dst if tmp_dst.exists() else src))
+            
+            page_mds = []
+            full_md = f"# Documento: {src.name}\n\n"
+            
+            for idx, page in enumerate(reader.pages, 1):
+                raw_txt = page.extract_text() or ""
+                if self.config.run_correction:
+                    raw_txt = self.corrector.correct_text(raw_txt, lang=self.config.lang)
+                
+                table_formatted_txt = self.table_parser.parse_text_to_tables(raw_txt)
+                page_header = f"## Página {idx}\n\n"
+                page_md = page_header + table_formatted_txt
+                page_mds.append({"page": idx, "markdown": page_md, "char_count": len(table_formatted_txt)})
+                full_md += page_md + "\n\n---\n\n"
+
+            return {
+                "success": res.success,
+                "engine_used": res.engine_used,
+                "pages": len(reader.pages),
+                "full_markdown": full_md,
+                "page_details": page_mds,
+            }
+        finally:
+            tmp_dst.unlink(missing_ok=True)
+
+    def process_to_chunks(self, src: Path, chunk_size: int = 500, chunk_overlap: int = 50) -> dict:
+        """
+        Procesa un PDF y genera chunks de vectores optimizados para Qdrant, Meilisearch y RAG.
+        """
+        md_res = self.process_to_markdown(src)
+        chunker = RAGChunker(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        
+        all_chunks = []
+        for page_data in md_res.get("page_details", []):
+            p_num = page_data["page"]
+            p_md = page_data["markdown"]
+            page_chunks = chunker.chunk_text(
+                text=p_md,
+                source_name=src.name,
+                page_number=p_num,
+                engine_used=md_res.get("engine_used", "er296"),
+            )
+            all_chunks.extend(page_chunks)
+
+        return {
+            "success": md_res.get("success", False),
+            "source_file": src.name,
+            "engine_used": md_res.get("engine_used", "er296"),
+            "total_pages": md_res.get("pages", 0),
+            "total_chunks": len(all_chunks),
+            "chunks": all_chunks,
+        }
+
     def shutdown(self):
         self.engine.shutdown()
 
     def engine_status(self) -> dict:
         return self.engine.status()
+

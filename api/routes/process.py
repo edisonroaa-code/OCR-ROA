@@ -155,6 +155,80 @@ async def process_pdf_async(
     }
 
 
+@router.post(
+    "/process/markdown",
+    summary="Procesa un PDF y retorna Markdown estructurado para LLMs y RAG",
+    description="Sube un PDF/Imagen y retorna el contenido estructurado en Markdown con tablas formateadas.",
+)
+async def process_markdown_endpoint(
+    file: UploadFile = File(...),
+    lang: str = Form(default="spa+eng"),
+    engine: OCREngine = Form(default=OCREngine.AUTO),
+    dpi: int = Form(default=300),
+    _key: str = Depends(require_api_key),
+):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Se requiere un archivo")
+
+    content = await file.read()
+    tmp_input = settings.temp_dir / f"in_md_{uuid.uuid4().hex}.pdf"
+    tmp_input.write_bytes(content)
+
+    try:
+        import asyncio
+        from core.pipeline import PDFPipeline, PipelineConfig
+
+        loop = asyncio.get_event_loop()
+
+        def _run():
+            cfg = PipelineConfig(lang=lang, dpi=dpi, skip_if_has_text=False, ocr_engine=engine.value)
+            pipe = PDFPipeline(config=cfg, er296_dir=settings.er296_dir)
+            pipe.initialize()
+            return pipe.process_to_markdown(tmp_input)
+
+        return await loop.run_in_executor(None, _run)
+    finally:
+        tmp_input.unlink(missing_ok=True)
+
+
+@router.post(
+    "/process/chunks",
+    summary="Procesa un PDF y retorna Chunks de Vectores para Qdrant y Meilisearch",
+    description="Sube un PDF/Imagen y retorna fragmentos segmentados con payloads listos para Qdrant, Meilisearch y LangChain.",
+)
+async def process_chunks_endpoint(
+    file: UploadFile = File(...),
+    chunk_size: int = Form(default=500),
+    chunk_overlap: int = Form(default=50),
+    lang: str = Form(default="spa+eng"),
+    engine: OCREngine = Form(default=OCREngine.AUTO),
+    dpi: int = Form(default=300),
+    _key: str = Depends(require_api_key),
+):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Se requiere un archivo")
+
+    content = await file.read()
+    tmp_input = settings.temp_dir / f"in_chk_{uuid.uuid4().hex}.pdf"
+    tmp_input.write_bytes(content)
+
+    try:
+        import asyncio
+        from core.pipeline import PDFPipeline, PipelineConfig
+
+        loop = asyncio.get_event_loop()
+
+        def _run():
+            cfg = PipelineConfig(lang=lang, dpi=dpi, skip_if_has_text=False, ocr_engine=engine.value)
+            pipe = PDFPipeline(config=cfg, er296_dir=settings.er296_dir)
+            pipe.initialize()
+            return pipe.process_to_chunks(tmp_input, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+
+        return await loop.run_in_executor(None, _run)
+    finally:
+        tmp_input.unlink(missing_ok=True)
+
+
 async def _run_pipeline(src: Path, dst: Path, options: ProcessOptions) -> dict:
     """Ejecuta el pipeline de forma asíncrona (en thread pool)."""
     import asyncio
@@ -176,7 +250,7 @@ async def _run_pipeline(src: Path, dst: Path, options: ProcessOptions) -> dict:
         pipeline = PDFPipeline(config=config, er296_dir=settings.er296_dir)
         pipeline.initialize()
         result = pipeline.process(src, dst)
-        pipeline.shutdown()
         return result.as_dict()
 
     return await loop.run_in_executor(None, _run)
+
